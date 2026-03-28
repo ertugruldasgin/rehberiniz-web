@@ -54,7 +54,7 @@ export default async function LoginPage(props: LoginPageProps) {
 
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-2">
-      <div className="relative hidden h-full flex-col bg-background p-6 text-primary-foreground lg:flex">
+      <div className="relative hidden h-full flex-col bg-linear-to-r from-background to-white p-6 text-primary-foreground lg:flex">
         <div className="relative z-20 h-full bg-primary rounded-2xl px-8 py-12 flex flex-col justify-between overflow-hidden">
           <div
             className="absolute inset-0 z-0 opacity-[0.07] rounded-2xl"

@@ -15,6 +15,7 @@ import "@fontsource/merriweather/700.css";
 import "@fontsource/merriweather/700-italic.css";
 import "@fontsource/merriweather/900.css";
 import "@fontsource/merriweather/900-italic.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "Rehberiniz",
@@ -27,9 +28,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" className="bg-sidebar">
       <body className="font-sans antialiased">
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
   );

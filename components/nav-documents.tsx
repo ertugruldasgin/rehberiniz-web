@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   DropdownMenu,
@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -15,25 +15,30 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/components/ui/sidebar"
-import { MoreHorizontalIcon, FolderIcon, ArrowRightIcon, Trash2Icon } from "lucide-react"
+} from "@/components/ui/sidebar";
+import {
+  MoreHorizontalIcon,
+  FolderIcon,
+  ShareIcon,
+  Trash2Icon,
+} from "lucide-react";
 
-export function NavProjects({
-  projects,
+export function NavDocuments({
+  items,
 }: {
-  projects: {
-    name: string
-    url: string
-    icon: React.ReactNode
-  }[]
+  items: {
+    name: string;
+    url: string;
+    icon: React.ReactNode;
+  }[];
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile } = useSidebar();
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>Documents</SidebarGroupLabel>
       <SidebarMenu>
-        {projects.map((item) => (
+        {items.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <a href={item.url}>
@@ -45,30 +50,29 @@ export function NavProjects({
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction
                   showOnHover
-                  className="aria-expanded:bg-muted"
+                  className="rounded-sm data-[state=open]:bg-accent"
                 >
-                  <MoreHorizontalIcon
-                  />
+                  <MoreHorizontalIcon />
                   <span className="sr-only">More</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-48 rounded-lg"
+                className="w-24 rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
                 <DropdownMenuItem>
-                  <FolderIcon className="text-muted-foreground" />
-                  <span>View Project</span>
+                  <FolderIcon />
+                  <span>Open</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <ArrowRightIcon className="text-muted-foreground" />
-                  <span>Share Project</span>
+                  <ShareIcon />
+                  <span>Share</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2Icon className="text-muted-foreground" />
-                  <span>Delete Project</span>
+                <DropdownMenuItem variant="destructive">
+                  <Trash2Icon />
+                  <span>Delete</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -82,5 +86,5 @@ export function NavProjects({
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }
