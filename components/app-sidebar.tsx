@@ -3,6 +3,7 @@
 import * as React from "react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Sidebar,
   SidebarContent,
@@ -18,6 +19,7 @@ import { useUserRole } from "@/hooks/use-user-tole";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, loading } = useUserRole();
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
 
   if (loading) {
     return (
@@ -64,6 +66,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
+        <div className="px-2 pb-2">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={setDate}
+            className="w-full bg-sidebar rounded-lg border border-border"
+          />
+        </div>
         <NavUser
           user={{
             name: userData.full_name,
