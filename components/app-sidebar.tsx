@@ -71,7 +71,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="w-full bg-sidebar rounded-lg border border-border"
+            className="w-full bg-sidebar rounded-lg border border-sidebar-border"
           />
         </div>
         <NavUser
