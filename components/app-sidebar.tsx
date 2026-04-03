@@ -19,7 +19,12 @@ import { useUserRole } from "@/hooks/use-user-tole";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, loading } = useUserRole();
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [timeZone, setTimeZone] = React.useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  }, []);
 
   if (loading) {
     return (
@@ -71,14 +76,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             mode="single"
             selected={date}
             onSelect={setDate}
-            className="w-full bg-sidebar rounded-lg border border-sidebar-border"
+            timeZone={timeZone}
+            className="w-full bg-sidebar rounded-lg border border-sidebar-border [&_button[data-selected-single=true]]:font-bold"
           />
         </div>
         <NavUser
           user={{
             name: userData.full_name,
             email: userData.email,
-            avatar: userData.avatar_url ?? "",
+            avatar_url: userData.avatar_url ?? "",
           }}
         />
       </SidebarFooter>

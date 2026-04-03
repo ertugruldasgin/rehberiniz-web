@@ -24,7 +24,7 @@ export function NavUser({
   user: {
     name: string;
     email: string;
-    avatar: string;
+    avatar_url: string;
   };
 }) {
   const router = useRouter();
@@ -45,18 +45,23 @@ export function NavUser({
   return (
     <SidebarMenu>
       <SidebarMenuItem>
-        <div className="flex items-center gap-3 px-2 py-2">
-          <Avatar className="h-8 w-8 rounded-lg shrink-0">
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-medium">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
-            <span className="truncate font-medium">{user.name}</span>
-            <span className="truncate text-xs text-muted-foreground">
-              {user.email}
-            </span>
+        <div className="flex items-center justify-between gap-3 px-2 py-2">
+          <div
+            className="flex items-center gap-3 hover:cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg p-2"
+            onClick={() => router.push("/dashboard/profile")}
+          >
+            <Avatar className="h-8 w-8 rounded-lg shrink-0 ">
+              <AvatarImage src={user.avatar_url} alt={user.name} />
+              <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight min-w-0">
+              <span className="truncate font-medium">{user.name}</span>
+              <span className="truncate text-xs text-muted-foreground">
+                {user.email}
+              </span>
+            </div>
           </div>
 
           <AlertDialog>

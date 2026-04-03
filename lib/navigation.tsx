@@ -1,13 +1,16 @@
 import {
   LayoutDashboardIcon,
   UsersIcon,
-  ChartBarIcon,
   FileChartColumnIcon,
   Settings2Icon,
   ClipboardListIcon,
-  TargetIcon,
   GraduationCapIcon,
   FileTextIcon,
+  BetweenHorizontalEnd,
+  GalleryHorizontalEnd,
+  Notebook,
+  ChartSpline,
+  Goal,
 } from "lucide-react";
 
 type UserRole = "admin" | "teacher" | "student";
@@ -98,12 +101,12 @@ export function getNavItems(role: UserRole) {
           {
             title: "Sonuç Girişi",
             url: "/dashboard/teacher/exam-entry",
-            icon: <UsersIcon />,
+            icon: <BetweenHorizontalEnd />,
           },
           {
             title: "Sınav Geçmişi",
             url: "/dashboard/teacher/exam-history",
-            icon: <ClipboardListIcon />,
+            icon: <GalleryHorizontalEnd />,
           },
         ],
       },
@@ -113,7 +116,7 @@ export function getNavItems(role: UserRole) {
           {
             title: "Görüşme Notları",
             url: "/dashboard/teacher/meeting-notes",
-            icon: <FileChartColumnIcon />,
+            icon: <Notebook />,
           },
           {
             title: "Raporlar",
@@ -140,12 +143,12 @@ export function getNavItems(role: UserRole) {
           {
             title: "Sınav Sonuçlarım",
             url: "/dashboard/student/exam-results",
-            icon: <ClipboardListIcon />,
+            icon: <GalleryHorizontalEnd />,
           },
           {
             title: "Gelişim Grafiğim",
             url: "/dashboard/student/my-progress",
-            icon: <ChartBarIcon />,
+            icon: <ChartSpline />,
           },
         ],
       },
@@ -155,12 +158,12 @@ export function getNavItems(role: UserRole) {
           {
             title: "Notlarım",
             url: "/dashboard/student/notes",
-            icon: <LayoutDashboardIcon />,
+            icon: <Notebook />,
           },
           {
             title: "Hedeflerim",
             url: "/dashboard/student/goals",
-            icon: <TargetIcon />,
+            icon: <Goal />,
           },
         ],
       },

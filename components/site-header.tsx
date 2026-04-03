@@ -31,6 +31,9 @@ const pageTitles: Record<string, string> = {
   "/dashboard/student/my-progress": "Performans / Gelişim Grafiğim",
   "/dashboard/student/notes": "Rehberlik / Notlarım",
   "/dashboard/student/goals": "Rehberlik / Hedeflerim",
+
+  // Genel
+  "/dashboard/profile": "Profil",
 };
 
 export function SiteHeader() {
