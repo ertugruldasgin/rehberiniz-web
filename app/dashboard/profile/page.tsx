@@ -6,12 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
-import {
-  CameraIcon,
-  KeyRoundIcon,
-  ShieldCheckIcon,
-  UserIcon,
-} from "lucide-react";
+import { useUserRole } from "@/hooks/use-user-tole";
+import { CameraIcon, KeyRoundIcon, UserIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -20,44 +16,22 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { userData, loading: userLoading, refresh } = useUserRole();
 
-  const [loading, setLoading] = useState(true);
-  const [avatarUrl, setAvatarUrl] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [userId, setUserId] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Sync local fullName state when userData changes (e.g. after refresh)
   useEffect(() => {
-    async function load() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url")
-        .eq("id", user.id)
-        .single();
-
-      setUserId(user.id);
-      setEmail(user.email ?? "");
-      setFullName(profile?.full_name ?? "");
-      setAvatarUrl(profile?.avatar_url ?? "");
-      setLoading(false);
+    if (userData) {
+      setFullName(userData.full_name);
     }
-    load();
-  }, []);
+  }, [userData]);
 
   const initials = fullName
     .trim()
@@ -79,7 +53,7 @@ export default function ProfilePage() {
       toast.error("Sadece JPEG, PNG veya WebP yükleyebilirsiniz.");
       return;
     }
-    if (!userId) {
+    if (!userData) {
       toast.error("Kullanıcı bilgisi bulunamadı.");
       return;
     }
@@ -88,7 +62,7 @@ export default function ProfilePage() {
     try {
       const supabase = createClient();
       const ext = file.type.split("/")[1];
-      const path = `${userId}/avatar.${ext}`;
+      const path = `${userData.id}/avatar.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("avatars")
         .upload(path, file, { upsert: true });
@@ -98,10 +72,10 @@ export default function ProfilePage() {
       const { error: updateError } = await supabase
         .from("profiles")
         .update({ avatar_url: publicUrl })
-        .eq("id", userId);
+        .eq("id", userData.id);
       if (updateError) throw updateError;
-      setAvatarUrl(publicUrl);
       toast.success("Profil fotoğrafı güncellendi.");
+      await refresh();
     } catch {
       toast.error("Yükleme sırasında bir hata oluştu.");
     } finally {
@@ -115,7 +89,7 @@ export default function ProfilePage() {
       toast.error("Ad Soyad boş bırakılamaz.");
       return;
     }
-    if (!userId) {
+    if (!userData) {
       toast.error("Kullanıcı bilgisi bulunamadı.");
       return;
     }
@@ -125,9 +99,10 @@ export default function ProfilePage() {
       const { error } = await supabase
         .from("profiles")
         .update({ full_name: fullName.trim() })
-        .eq("id", userId);
+        .eq("id", userData.id);
       if (error) throw error;
       toast.success("Ad Soyad güncellendi.");
+      await refresh();
     } catch {
       toast.error("Güncelleme sırasında bir hata oluştu.");
     } finally {
@@ -152,7 +127,7 @@ export default function ProfilePage() {
     try {
       const supabase = createClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: userData?.email ?? "",
         password: currentPassword,
       });
       if (signInError) {
@@ -174,7 +149,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
+  if (userLoading) {
     return (
       <div className="w-full px-4 md:px-6 py-6 md:py-8">
         <div className="space-y-6">
@@ -245,7 +220,10 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div className="relative group shrink-0">
               <Avatar className="h-24 w-24 rounded-2xl ring-1 ring-border">
-                <AvatarImage src={avatarUrl} alt={fullName} />
+                <AvatarImage
+                  src={userData?.avatar_url ?? ""}
+                  alt={userData?.full_name ?? ""}
+                />
                 <AvatarFallback className="rounded-2xl bg-primary text-primary-foreground text-2xl font-semibold">
                   {initials || "?"}
                 </AvatarFallback>
@@ -273,7 +251,7 @@ export default function ProfilePage() {
                   {fullName || "İsimsiz kullanıcı"}
                 </p>
                 <p className="text-sm text-muted-foreground truncate">
-                  {email}
+                  {userData?.email}
                 </p>
               </div>
             </div>
@@ -296,7 +274,7 @@ export default function ProfilePage() {
             <div className="space-y-2">
               <Label>E-posta</Label>
               <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm text-muted-foreground">
-                {email}
+                {userData?.email}
               </div>
               <p className="text-xs text-muted-foreground">
                 E-posta adresi değiştirilemez.

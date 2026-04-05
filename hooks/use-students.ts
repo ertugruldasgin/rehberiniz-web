@@ -1,0 +1,78 @@
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState, useCallback } from "react";
+
+export interface Student {
+  id: string;
+  first_name: string;
+  last_name: string;
+  student_number: string | null;
+  grade: string | null;
+  branch: string | null;
+  avatar_url: string | null;
+}
+
+export function useStudents() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStudents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Kullanıcı bulunamadı.");
+
+      const { data: member, error: memberError } = await supabase
+        .from("organization_members")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+      if (memberError) throw memberError;
+
+      const { data, error: studentsError } = await supabase
+        .from("students")
+        .select(
+          `
+          id,
+          first_name,
+          last_name,
+          student_number,
+          grade,
+          branch,
+          profiles!students_user_id_fkey1 (avatar_url)
+        `,
+        )
+        .eq("teacher_id", member.id)
+        .order("first_name");
+      if (studentsError) throw studentsError;
+
+      const mapped = (data ?? []).map((s: any) => ({
+        id: s.id,
+        first_name: s.first_name,
+        last_name: s.last_name,
+        student_number: s.student_number,
+        grade: s.grade,
+        branch: s.branch,
+        avatar_url: s.profiles?.avatar_url ?? null,
+      }));
+
+      setStudents(mapped);
+    } catch (err) {
+      setError("Öğrenciler yüklenirken bir hata oluştu.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStudents();
+  }, [fetchStudents]);
+
+  return { students, loading, error, refetch: fetchStudents };
+}
