@@ -50,9 +50,13 @@ export function NavUser({
             className="flex items-center gap-3 hover:cursor-pointer hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-lg p-2"
             onClick={() => router.push("/dashboard/profile")}
           >
-            <Avatar className="h-8 w-8 rounded-lg shrink-0 ">
-              <AvatarImage src={user.avatar_url} alt={user.name} />
-              <AvatarFallback className="rounded-lg bg-primary text-primary-foreground text-xs font-medium">
+            <Avatar className="h-8 w-8 rounded-md shrink-0 ">
+              <AvatarImage
+                src={user.avatar_url}
+                alt={user.name}
+                className="rounded-md"
+              />
+              <AvatarFallback className="rounded-md bg-primary text-primary-foreground text-xs font-medium">
                 {initials}
               </AvatarFallback>
             </Avatar>

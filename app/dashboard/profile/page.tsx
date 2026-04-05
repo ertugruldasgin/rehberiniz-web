@@ -223,6 +223,7 @@ export default function ProfilePage() {
                 <AvatarImage
                   src={userData?.avatar_url ?? ""}
                   alt={userData?.full_name ?? ""}
+                  className="rounded-2xl"
                 />
                 <AvatarFallback className="rounded-2xl bg-primary text-primary-foreground text-2xl font-semibold">
                   {initials || "?"}

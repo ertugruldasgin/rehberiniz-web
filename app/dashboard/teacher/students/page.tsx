@@ -93,14 +93,14 @@ export default function StudentsPage() {
       {/* Tablo kartı */}
       <div className="rounded-2xl border bg-card overflow-hidden">
         {/* Arama */}
-        <div className="p-4 border-b">
-          <div className="relative">
+        <div className="p-4 border-b bg-muted/80">
+          <div className="relative w-full max-w-sm">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
-              placeholder="İsim, numara, sınıf veya şube ara..."
+              placeholder="İsim, numara, sınıf veya alan ara..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10"
+              className="pl-9 h-10 bg-card"
             />
           </div>
         </div>
@@ -115,7 +115,12 @@ export default function StudentsPage() {
                 : "Henüz öğrenci bulunmuyor."}
             </p>
             {search && (
-              <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSearch("")}
+                className="hover:cursor-pointer"
+              >
                 Aramayı temizle
               </Button>
             )}
@@ -124,7 +129,7 @@ export default function StudentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-muted/40">
+                <tr className="border-b bg-muted/80">
                   <th className="text-left font-medium text-muted-foreground px-4 py-3 w-12">
                     #
                   </th>
@@ -138,7 +143,7 @@ export default function StudentsPage() {
                     Sınıf
                   </th>
                   <th className="text-left font-medium text-muted-foreground px-4 py-3 hidden md:table-cell">
-                    Şube
+                    Alan
                   </th>
                   <th className="w-10 px-4 py-3" />
                 </tr>
@@ -148,7 +153,7 @@ export default function StudentsPage() {
                   <tr
                     key={student.id}
                     onClick={() =>
-                      router.push(`/dashboard/students/${student.id}`)
+                      router.push(`/dashboard/teacher/students/${student.id}`)
                     }
                     className="hover:bg-muted/40 transition-colors cursor-pointer group"
                   >
@@ -212,7 +217,7 @@ export default function StudentsPage() {
 
         {/* Footer */}
         {filtered.length > 0 && (
-          <div className="px-4 py-3 border-t bg-muted/20 text-xs text-muted-foreground">
+          <div className="px-4 py-3 border-t bg-muted/80 text-xs text-muted-foreground">
             {search
               ? `${filtered.length} sonuç gösteriliyor`
               : `${students.length} öğrenci`}
