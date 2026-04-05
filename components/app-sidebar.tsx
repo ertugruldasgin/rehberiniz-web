@@ -16,6 +16,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getNavItems } from "@/lib/navigation";
 import { useUserRole } from "@/hooks/use-user-tole";
+import { tr } from "date-fns/locale";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, loading } = useUserRole();
@@ -77,6 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             selected={date}
             onSelect={setDate}
             timeZone={timeZone}
+            locale={tr}
             className="w-full bg-sidebar rounded-lg border border-sidebar-border [&_button[data-selected-single=true]]:font-bold"
           />
         </div>
