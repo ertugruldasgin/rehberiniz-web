@@ -5,6 +5,7 @@ import { useStudent } from "@/hooks/use-student";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ExamResultsTable } from "@/components/exam-results-table";
 import {
   ArrowLeftIcon,
   PencilIcon,
@@ -12,13 +13,15 @@ import {
   UserIcon,
   MailIcon,
   HashIcon,
-  SchoolIcon,
   CalendarIcon,
-  ClipboardListIcon,
   BookOpenIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { useExamResults } from "@/hooks/use-exam-results";
+
+type Tab = "general" | "exams" | "notes";
 
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +29,8 @@ export default function StudentDetailPage() {
   const { student, loading, error, refetch } = useStudent(id);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>("general");
+  const { results: examResults, loading: examLoading } = useExamResults(id);
 
   const initials = student
     ? `${student.first_name[0] ?? ""}${student.last_name[0] ?? ""}`.toUpperCase()
@@ -202,98 +207,150 @@ export default function StudentDetailPage() {
         <div className="xl:col-span-2 space-y-4">
           {/* Tab başlıkları */}
           <div className="flex items-center gap-1 border-b">
-            <button className="px-4 py-2.5 text-sm font-medium text-primary border-b-2 border-primary -mb-px cursor-pointer">
+            <TabButton
+              active={activeTab === "general"}
+              onClick={() => setActiveTab("general")}
+            >
               Genel Bilgiler
-            </button>
-            <button
-              disabled
-              className="px-4 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed flex items-center gap-1.5"
+            </TabButton>
+            <TabButton
+              active={activeTab === "exams"}
+              onClick={() => setActiveTab("exams")}
             >
               Sınav Sonuçları
-              <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-                Yakında
-              </Badge>
-            </button>
-            <button
-              disabled
-              className="px-4 py-2.5 text-sm font-medium text-muted-foreground/50 cursor-not-allowed flex items-center gap-1.5"
-            >
+            </TabButton>
+            <TabButton disabled>
               Rehberlik Notları
               <Badge variant="outline" className="text-[10px] py-0 px-1.5">
                 Yakında
               </Badge>
-            </button>
+            </TabButton>
           </div>
 
-          {/* Genel Bilgiler içeriği */}
-          <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
+          {/* Tab içerikleri */}
+          {activeTab === "general" && (
+            <>
+              {/* Genel Bilgiler */}
+              <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 ml-6">
+                    Öğrencinin temel kayıt bilgileri.
+                  </p>
+                </div>
+                <Separator />
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
+                    <p className="text-sm font-medium">{student.first_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Soyad
+                    </p>
+                    <p className="text-sm font-medium">{student.last_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      E-posta
+                    </p>
+                    <p className="text-sm font-medium">
+                      {student.email ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Öğrenci No
+                    </p>
+                    <p className="text-sm font-medium">
+                      {student.student_number ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Sınıf
+                    </p>
+                    <p className="text-sm font-medium">
+                      {student.grade ?? "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-0.5">
+                      Alan / Şube
+                    </p>
+                    <p className="text-sm font-medium">
+                      {student.branch ?? "—"}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-                Öğrencinin temel kayıt bilgileri.
+            </>
+          )}
+
+          {activeTab === "exams" &&
+            (examLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-12 rounded-xl bg-muted animate-pulse"
+                  />
+                ))}
+              </div>
+            ) : (
+              <ExamResultsTable results={examResults} />
+            ))}
+
+          {/* Rehberlik Notları — placeholder */}
+          {activeTab === "notes" && (
+            <div className="rounded-2xl border border-dashed bg-card/50 p-6 flex flex-col items-center gap-2 text-center">
+              <BookOpenIcon className="h-6 w-6 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-muted-foreground/50">
+                Rehberlik Notları
+              </p>
+              <p className="text-xs text-muted-foreground/40">
+                Bu bölüm yakında eklenecek.
               </p>
             </div>
-            <Separator />
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
-                <p className="text-sm font-medium">{student.first_name}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
-                <p className="text-sm font-medium">{student.last_name}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">E-posta</p>
-                <p className="text-sm font-medium">{student.email ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Öğrenci No
-                </p>
-                <p className="text-sm font-medium">
-                  {student.student_number ?? "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Sınıf</p>
-                <p className="text-sm font-medium">{student.grade ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Alan / Şube
-                </p>
-                <p className="text-sm font-medium">{student.branch ?? "—"}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Yakında gelecek bölümler — placeholder */}
-          <div className="rounded-2xl border border-dashed bg-card/50 p-6 flex flex-col items-center gap-2 text-center">
-            <ClipboardListIcon className="h-6 w-6 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground/50">
-              Sınav Sonuçları
-            </p>
-            <p className="text-xs text-muted-foreground/40">
-              Bu bölüm yakında eklenecek.
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-dashed bg-card/50 p-6 flex flex-col items-center gap-2 text-center">
-            <BookOpenIcon className="h-6 w-6 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground/50">
-              Rehberlik Notları
-            </p>
-            <p className="text-xs text-muted-foreground/40">
-              Bu bölüm yakında eklenecek.
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+// ——————————————————————————————————————————————
+// Tab butonu
+// ——————————————————————————————————————————————
+function TabButton({
+  active = false,
+  disabled = false,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "px-4 py-2.5 text-sm font-medium -mb-px flex items-center gap-1.5 transition-colors",
+        active && "text-primary border-b-2 border-primary cursor-pointer",
+        !active &&
+          !disabled &&
+          "text-muted-foreground hover:text-foreground cursor-pointer",
+        disabled && "text-muted-foreground/50 cursor-not-allowed",
+      )}
+    >
+      {children}
+    </button>
   );
 }
