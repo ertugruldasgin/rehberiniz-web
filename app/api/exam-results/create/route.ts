@@ -14,11 +14,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
     const body = await req.json();
-    const { title, date, template_id, sections } = body;
+    const { title, date, template_id, subject_id, sections } = body;
 
-    if (!title || !date || !template_id || !sections?.length)
+    if (!title || !date || !sections?.length)
       return NextResponse.json(
         { error: "Zorunlu alanlar eksik." },
+        { status: 400 },
+      );
+
+    if (!template_id && !subject_id)
+      return NextResponse.json(
+        { error: "Şablon veya ders seçiniz." },
         { status: 400 },
       );
 
@@ -35,14 +41,15 @@ export async function POST(req: NextRequest) {
         { status: 404 },
       );
 
-    // 1. Sınav oluştur (is_standalone: true)
+    // 1. Sınav oluştur
     const { data: exam, error: examError } = await adminSupabase
       .from("exams")
       .insert({
         title,
         date,
         organization_id: student.organization_id,
-        exam_template_id: template_id,
+        exam_template_id: template_id ?? null,
+        subject_id: subject_id ?? null,
         is_official: false,
       })
       .select("id")
@@ -83,7 +90,6 @@ export async function POST(req: NextRequest) {
     if (resultError) throw resultError;
 
     // 3. Her section için subject_results ekle
-    // Önce subject slug'larını id'ye çevir
     const slugs = sections.map((s: any) => s.key);
     const { data: subjects } = await adminSupabase
       .from("subjects")
@@ -98,13 +104,13 @@ export async function POST(req: NextRequest) {
       .map((s: any) => ({
         exam_result_id: examResult.id,
         subject_id: subjectMap[s.key],
-        is_standalone: true,
+        is_standalone: !!subject_id, // branş ise true, genel ise false
         correct: s.correct || 0,
         incorrect: s.incorrect || 0,
         empty: s.empty || 0,
         net: s.net || 0,
       }))
-      .filter((s: any) => s.subject_id); // subject bulunamayanları atla
+      .filter((s: any) => s.subject_id);
 
     if (subjectResults.length > 0) {
       const { error: subjectError } = await adminSupabase

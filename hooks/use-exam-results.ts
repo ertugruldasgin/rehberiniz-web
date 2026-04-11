@@ -1,111 +1,131 @@
-import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState, useCallback } from "react";
 import type { ExamResult } from "@/types/exam";
 
-// ——————————————————————————————————————————————
-// Sahte veri — gerçek Supabase entegrasyonuna kadar kullanılacak
-// ——————————————————————————————————————————————
-
-const MOCK_SUBJECTS = ["Türkçe", "Matematik", "Fen Bilimleri", "Sosyal Bilgiler"];
-
-function randomBetween(min: number, max: number) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function generateMockResults(): ExamResult[] {
-  const exams = [
-    { name: "TYT Deneme 1", date: "2026-01-15" },
-    { name: "TYT Deneme 2", date: "2026-02-08" },
-    { name: "TYT Deneme 3", date: "2026-02-22" },
-    { name: "TYT Deneme 4", date: "2026-03-12" },
-    { name: "TYT Deneme 5", date: "2026-03-29" },
-  ];
-
-  return exams.map((exam, idx) => {
-    const subjects = MOCK_SUBJECTS.map((name, sortIdx) => {
-      const totalQ = name === "Matematik" ? 40 : 20;
-      const correct = randomBetween(Math.floor(totalQ * 0.3), totalQ);
-      const wrong = randomBetween(0, totalQ - correct);
-      const empty = totalQ - correct - wrong;
-      const net = correct - wrong * 0.25;
-
-      return {
-        subject_name: name,
+async function fetchResults(
+  supabase: any,
+  studentId: string,
+): Promise<ExamResult[]> {
+  const { data, error } = await supabase
+    .from("exam_results")
+    .select(
+      `
+      id,
+      total_correct,
+      total_incorrect,
+      total_empty,
+      total_net,
+      exams (
+        title,
+        date,
+        is_official,
+        exam_template_id,
+        subject_id
+      ),
+      subject_results (
         correct,
-        wrong,
+        incorrect,
         empty,
-        net: parseFloat(net.toFixed(2)),
-        sort_order: sortIdx,
-      };
-    });
+        net,
+        is_standalone,
+        subjects (
+          name
+        )
+      )
+    `,
+    )
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
 
-    const total_correct = subjects.reduce((s, x) => s + x.correct, 0);
-    const total_wrong = subjects.reduce((s, x) => s + x.wrong, 0);
-    const total_empty = subjects.reduce((s, x) => s + x.empty, 0);
-    const total_net = subjects.reduce((s, x) => s + x.net, 0);
+  console.log("exam_results data:", JSON.stringify(data, null, 2));
+
+  if (error) throw error;
+
+  return (data ?? []).map((r: any) => {
+    const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+    const isBranch = !exam?.exam_template_id && !!exam?.subject_id;
 
     return {
-      id: `mock-exam-${idx + 1}`,
-      exam_name: exam.name,
-      exam_date: exam.date,
-      subjects,
-      total_correct,
-      total_wrong,
-      total_empty,
-      total_net: parseFloat(total_net.toFixed(2)),
+      id: r.id,
+      exam_name: exam?.title ?? "—",
+      exam_date: exam?.date ?? "",
+      is_standalone: isBranch,
+      total_correct: r.total_correct,
+      total_incorrect: r.total_incorrect,
+      total_empty: r.total_empty,
+      total_net: r.total_net,
+      subjects: (r.subject_results ?? []).map((s: any) => ({
+        subject_name: s.subjects?.name ?? "—",
+        correct: s.correct,
+        incorrect: s.incorrect,
+        empty: s.empty,
+        net: s.net,
+      })),
     };
   });
 }
 
-// Sabit seed — her renderda aynı veriyi döndür
-let _cachedResults: ExamResult[] | null = null;
-function getMockResults(): ExamResult[] {
-  if (!_cachedResults) {
-    _cachedResults = generateMockResults();
-  }
-  return _cachedResults;
-}
-
-// ——————————————————————————————————————————————
-// Öğrencinin kendi sonuçlarını çeken hook (student paneli)
-// ——————————————————————————————————————————————
 export function useMyExamResults() {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Sahte network gecikmesi
-    const timer = setTimeout(() => {
-      setResults(getMockResults());
-      setLoading(false);
-    }, 600);
+  const fetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Kullanıcı bulunamadı.");
 
-    return () => clearTimeout(timer);
+      const { data: student } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+      if (!student) throw new Error("Öğrenci kaydı bulunamadı.");
+
+      const data = await fetchResults(supabase, student.id);
+      setResults(data);
+    } catch (err) {
+      setError("Sonuçlar yüklenirken bir hata oluştu.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { results, loading, error };
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+  return { results, loading, error, refetch: fetch };
 }
 
-// ——————————————————————————————————————————————
-// Belirli bir öğrencinin sonuçlarını çeken hook (öğretmen paneli)
-// ——————————————————————————————————————————————
 export function useExamResults(studentId: string) {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetch = useCallback(async () => {
+    if (!studentId) return;
     setLoading(true);
     setError(null);
-
-    // Sahte network gecikmesi
-    const timer = setTimeout(() => {
-      setResults(getMockResults());
+    try {
+      const supabase = createClient();
+      const data = await fetchResults(supabase, studentId);
+      setResults(data);
+    } catch (err) {
+      setError("Sonuçlar yüklenirken bir hata oluştu.");
+      console.error(err);
+    } finally {
       setLoading(false);
-    }, 600);
-
-    return () => clearTimeout(timer);
+    }
   }, [studentId]);
 
-  return { results, loading, error };
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+  return { results, loading, error, refetch: fetch };
 }

@@ -13,7 +13,8 @@ import {
 import type { ExamResult } from "@/types/exam";
 
 function formatDate(iso: string) {
-  const d = new Date(iso);
+  if (!iso) return "—";
+  const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("tr-TR", {
     day: "numeric",
     month: "short",
@@ -37,7 +38,6 @@ function useCompactMode() {
 
     const check = () => {
       const { scrollWidth, clientWidth } = scrollContainer;
-
       if (!isCompact) {
         if (scrollWidth > clientWidth) {
           fullWidthRef.current = scrollWidth;
@@ -51,7 +51,6 @@ function useCompactMode() {
     };
 
     const raf = requestAnimationFrame(check);
-
     const ro = new ResizeObserver(check);
     ro.observe(el);
 
@@ -66,34 +65,54 @@ function useCompactMode() {
 
 interface ExamResultsTableProps {
   results: ExamResult[];
+  type: "general" | "branch";
   className?: string;
 }
 
 export function ExamResultsTable({
   results,
+  type,
   className,
 }: ExamResultsTableProps) {
-  const { containerRef, isCompact } = useCompactMode();
-
   if (results.length === 0) {
     return (
       <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-        Henüz sınav sonucu bulunmuyor.
+        {type === "general"
+          ? "Henüz genel deneme sonucu bulunmuyor."
+          : "Henüz branş denemesi sonucu bulunmuyor."}
       </div>
     );
   }
 
+  if (type === "branch")
+    return <BranchResultsTable results={results} className={className} />;
+  return <GeneralResultsTable results={results} className={className} />;
+}
+
+// ——————————————————————————————————————————————
+// Genel Deneme Tablosu
+// ——————————————————————————————————————————————
+function GeneralResultsTable({
+  results,
+  className,
+}: {
+  results: ExamResult[];
+  className?: string;
+}) {
+  const { containerRef, isCompact } = useCompactMode();
   const subjects = results[0].subjects.map((s) => s.subject_name);
 
   return (
-    <div ref={containerRef} className={cn("w-full", className)}>
+    <div
+      ref={containerRef}
+      className={cn("rounded-xl border overflow-hidden", className)}
+    >
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
             <TableHead className="sticky left-0 z-10 min-w-[140px] bg-muted/40">
               Sınav
             </TableHead>
-
             {subjects.map((subject) => (
               <TableHead
                 key={subject}
@@ -103,12 +122,10 @@ export function ExamResultsTable({
                 {subject}
               </TableHead>
             ))}
-
             <TableHead colSpan={isCompact ? 1 : 4} className="text-center">
               Toplam
             </TableHead>
           </TableRow>
-
           {!isCompact && (
             <TableRow className="border-border bg-muted/20">
               <TableHead className="sticky left-0 z-10 bg-muted/20" />
@@ -118,7 +135,6 @@ export function ExamResultsTable({
             </TableRow>
           )}
         </TableHeader>
-
         <TableBody>
           {results.map((result) => (
             <TableRow key={result.id} className="border-border">
@@ -132,7 +148,6 @@ export function ExamResultsTable({
                   </span>
                 </div>
               </TableCell>
-
               {result.subjects.map((s) =>
                 isCompact ? (
                   <TableCell
@@ -145,13 +160,12 @@ export function ExamResultsTable({
                   <SubjectCells
                     key={`${result.id}-${s.subject_name}`}
                     correct={s.correct}
-                    wrong={s.wrong}
+                    incorrect={s.incorrect}
                     empty={s.empty}
                     net={s.net}
                   />
                 ),
               )}
-
               {isCompact ? (
                 <TableCell className="text-center tabular-nums font-bold">
                   {result.total_net.toFixed(2)}
@@ -159,7 +173,7 @@ export function ExamResultsTable({
               ) : (
                 <SubjectCells
                   correct={result.total_correct}
-                  wrong={result.total_wrong}
+                  incorrect={result.total_incorrect}
                   empty={result.total_empty}
                   net={result.total_net}
                   isTotal
@@ -174,7 +188,72 @@ export function ExamResultsTable({
 }
 
 // ——————————————————————————————————————————————
-// Sub-header: D / Y / B / Net etiketleri
+// Branş Denemesi Tablosu
+// ——————————————————————————————————————————————
+function BranchResultsTable({
+  results,
+  className,
+}: {
+  results: ExamResult[];
+  className?: string;
+}) {
+  return (
+    <div className={cn("rounded-xl border overflow-hidden", className)}>
+      <Table>
+        <TableHeader>
+          <TableRow className="border-border bg-muted/40">
+            <TableHead className="min-w-[140px]">Sınav</TableHead>
+            <TableHead className="text-center">Ders</TableHead>
+            <TableHead className="text-center text-xs font-normal text-green-600 dark:text-green-400">
+              D
+            </TableHead>
+            <TableHead className="text-center text-xs font-normal text-red-500 dark:text-red-400">
+              Y
+            </TableHead>
+            <TableHead className="text-center text-xs font-normal text-muted-foreground">
+              B
+            </TableHead>
+            <TableHead className="text-center">Net</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {results.map((result) => (
+            <TableRow key={result.id} className="border-border">
+              <TableCell className="font-medium">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm leading-tight">
+                    {result.exam_name}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(result.exam_date)}
+                  </span>
+                </div>
+              </TableCell>
+              <TableCell className="text-center text-sm">
+                {result.subjects[0]?.subject_name ?? "—"}
+              </TableCell>
+              <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">
+                {result.subjects[0]?.correct ?? 0}
+              </TableCell>
+              <TableCell className="text-center tabular-nums text-red-500 dark:text-red-400">
+                {result.subjects[0]?.incorrect ?? 0}
+              </TableCell>
+              <TableCell className="text-center tabular-nums text-muted-foreground">
+                {result.subjects[0]?.empty ?? 0}
+              </TableCell>
+              <TableCell className="text-center tabular-nums font-bold">
+                {(result.subjects[0]?.net ?? 0).toFixed(2)}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+// ——————————————————————————————————————————————
+// Sub-header: D / Y / B / Net
 // ——————————————————————————————————————————————
 function SubHeaders() {
   return (
@@ -200,13 +279,13 @@ function SubHeaders() {
 // ——————————————————————————————————————————————
 function SubjectCells({
   correct,
-  wrong,
+  incorrect,
   empty,
   net,
   isTotal = false,
 }: {
   correct: number;
-  wrong: number;
+  incorrect: number;
   empty: number;
   net: number;
   isTotal?: boolean;
@@ -217,7 +296,7 @@ function SubjectCells({
         {correct}
       </TableCell>
       <TableCell className="text-center tabular-nums text-red-500 dark:text-red-400">
-        {wrong}
+        {incorrect}
       </TableCell>
       <TableCell className="text-center tabular-nums text-muted-foreground">
         {empty}
