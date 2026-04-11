@@ -20,6 +20,8 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useExamResults } from "@/hooks/use-exam-results";
+import { EditStudentDialog } from "@/components/edit-student-dialog";
+import { DeleteStudentDialog } from "@/components/delete-student-dialog";
 
 type Tab = "general" | "exams" | "notes";
 
@@ -98,11 +100,17 @@ export default function StudentDetailPage() {
             variant="outline"
             size="sm"
             onClick={() => setEditOpen(true)}
-            className="gap-1.5 cursor-pointer"
+            className="gap-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-muted-foreground/10 border-muted-foreground/30 cursor-pointer"
           >
             <PencilIcon className="h-3.5 w-3.5" />
             Düzenle
           </Button>
+          <EditStudentDialog
+            open={editOpen}
+            onOpenChange={setEditOpen}
+            onSuccess={refetch}
+            student={student}
+          />
           <Button
             variant="outline"
             size="sm"
@@ -112,6 +120,12 @@ export default function StudentDetailPage() {
             <Trash2Icon className="h-3.5 w-3.5" />
             Sil
           </Button>
+          <DeleteStudentDialog
+            open={deleteOpen}
+            onOpenChange={setDeleteOpen}
+            studentId={id}
+            studentName={`${student.first_name} ${student.last_name}`}
+          />
         </div>
       </div>
 
@@ -237,9 +251,6 @@ export default function StudentDetailPage() {
                     <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                     <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5 ml-6">
-                    Öğrencinin temel kayıt bilgileri.
-                  </p>
                 </div>
                 <Separator />
 

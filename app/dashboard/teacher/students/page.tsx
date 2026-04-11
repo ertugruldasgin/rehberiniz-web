@@ -200,7 +200,7 @@ export default function StudentsPage() {
                     </td>
                     <td className="px-4 py-3.5 hidden md:table-cell">
                       {student.branch ? (
-                        <Badge variant="outline">{student.branch}</Badge>
+                        <Badge variant="secondary">{student.branch}</Badge>
                       ) : (
                         <span className="text-muted-foreground/40">—</span>
                       )}
