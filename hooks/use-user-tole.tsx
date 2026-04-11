@@ -58,7 +58,7 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
       .from("organization_members")
       .select("organization_id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     setUserData({
       ...profile,
