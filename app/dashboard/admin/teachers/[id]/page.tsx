@@ -66,20 +66,12 @@ export default function TeacherDetailPage() {
     : "";
 
   const lastSignInAt = teacher?.last_sign_in_at
-    ? (() => {
-        const d = new Date(teacher.last_sign_in_at!);
-        const saat = d.toLocaleString("tr-TR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        const tarih = d.toLocaleString("tr-TR", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        });
-        return `${saat} - ${tarih}`;
-      })()
-    : "—";
+    ? new Date(teacher.last_sign_in_at).toLocaleDateString("tr-TR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
 
   async function handleToggleActive() {
     if (!teacher) return;
@@ -315,7 +307,7 @@ export default function TeacherDetailPage() {
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-muted-foreground">Son Giriş</p>
-              <p className="text-xs font-medium">{lastSignInAt}</p>
+              <p className="text-xs font-medium">{lastSignInAt || "—"}</p>
             </div>
           </div>
         </div>

@@ -376,7 +376,7 @@ export default function StudentDetailPage() {
                 <p className="text-xs text-muted-foreground mb-0.5">
                   Son Giriş Tarihi
                 </p>
-                <p className="text-sm font-medium">{lastSignInAt}</p>
+                <p className="text-sm font-medium">{lastSignInAt || "—"}</p>
               </div>
             </div>
           </div>

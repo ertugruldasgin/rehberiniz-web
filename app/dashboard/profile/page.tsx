@@ -191,7 +191,6 @@ export default function ProfilePage() {
               <div className="h-16 w-16 rounded-xl bg-muted animate-pulse shrink-0" />
               <div className="space-y-2 flex-1">
                 <div className="h-4 w-28 rounded bg-muted animate-pulse" />
-                <div className="h-3 w-20 rounded bg-muted animate-pulse" />
                 <div className="h-5 w-14 rounded-full bg-muted animate-pulse" />
               </div>
             </div>

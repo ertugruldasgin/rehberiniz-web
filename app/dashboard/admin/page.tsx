@@ -1,5 +1,3 @@
-import { SectionCards } from "@/components/section-cards";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { PageHeader } from "@/components/page-header";
 
 export default function AdminDashboard() {
@@ -9,7 +7,6 @@ export default function AdminDashboard() {
         title="Genel Bakış"
         description="Kurumunuzun genel durumunu görüntüleyin."
       />
-      <ChartAreaInteractive />
     </div>
   );
 }
