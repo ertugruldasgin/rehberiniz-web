@@ -12,22 +12,60 @@ import {
   UsersIcon,
   AlertCircleIcon,
   Clock,
+  PencilIcon,
+  Trash2Icon,
+  UserXIcon,
+  UserCheckIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { StudentsTable } from "@/components/students-table";
 import { AddStudentSheet } from "@/components/add-student-sheet";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { EditTeacherDialog } from "@/components/edit-teacher-dialog";
+import { DeleteTeacherDialog } from "@/components/delete-teacher-dialog";
 
 type Tab = "students";
 
 export default function TeacherDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const { teacher, loading, error } = useTeacher(id);
-  const { students, loading: studentsLoading, refetch } = useStudents();
+  const { teacher, loading, error, refetch } = useTeacher(id);
+  const {
+    students,
+    loading: studentsLoading,
+    refetch: refetchStudents,
+  } = useStudents();
   const [activeTab, setActiveTab] = useState<Tab>("students");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [togglingActive, setTogglingActive] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const initials = teacher
     ? teacher.full_name
@@ -61,6 +99,70 @@ export default function TeacherDetailPage() {
         return `${saat} - ${tarih}`;
       })()
     : "—";
+
+  async function handleToggleActive() {
+    if (!teacher) return;
+    setTogglingActive(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_active: !teacher.is_active })
+        .eq("id", teacher.user_id);
+      if (error) throw error;
+      toast.success(
+        teacher.is_active ? "Hesap pasife alındı." : "Hesap aktive edildi.",
+      );
+      refetch();
+    } catch {
+      toast.error("Bir hata oluştu.");
+    } finally {
+      setTogglingActive(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/teachers/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teacher_member_id: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Bir hata oluştu.");
+      toast.success("Öğretmen silindi.");
+      router.back();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  }
+
+  async function handleEdit() {
+    if (!editName.trim()) {
+      toast.error("Ad Soyad boş bırakılamaz.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: editName.trim(), title: editTitle.trim() || null })
+        .eq("id", teacher!.user_id);
+      if (error) throw error;
+      toast.success("Bilgiler güncellendi.");
+      refetch();
+      setEditOpen(false);
+    } catch {
+      toast.error("Bir hata oluştu.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -101,11 +203,58 @@ export default function TeacherDetailPage() {
       <div className="flex items-center justify-between gap-4">
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           <span className="hidden sm:inline">Öğretmenler</span>
         </button>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditOpen(true)}
+            className="gap-1.5 text-muted-foreground hover:text-muted-foreground hover:bg-muted-foreground/10 border-muted-foreground/30 cursor-pointer"
+          >
+            <PencilIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Düzenle</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleToggleActive}
+            disabled={togglingActive}
+            className={cn(
+              "gap-1.5 cursor-pointer",
+              teacher.is_active
+                ? "text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                : "text-green-600 hover:text-green-600 hover:bg-green-500/10 border-green-500/30",
+            )}
+          >
+            {teacher.is_active ? (
+              <>
+                <UserXIcon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Pasife Al</span>
+              </>
+            ) : (
+              <>
+                <UserCheckIcon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Aktive Et</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDeleteOpen(true)}
+            className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 cursor-pointer"
+          >
+            <Trash2Icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sil</span>
+          </Button>
+        </div>
       </div>
 
       {/* Profil Banner */}
@@ -222,12 +371,26 @@ export default function TeacherDetailPage() {
               <AddStudentSheet
                 open={sheetOpen}
                 onOpenChange={setSheetOpen}
-                onSuccess={refetch}
+                onSuccess={refetchStudents}
                 defaultTeacherId={id}
               />
             </>
           ))}
       </div>
+
+      <EditTeacherDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={refetch}
+        teacher={teacher}
+      />
+
+      <DeleteTeacherDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        teacherMemberId={id}
+        teacherName={teacher.full_name}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 
 export interface TeacherDetail {
   id: string;
+  user_id: string;
   full_name: string;
   email: string | null;
   avatar_url: string | null;
@@ -40,6 +41,7 @@ export function useTeacher(id: string) {
 
       setTeacher({
         id: data.id,
+        user_id: data.user_id,
         full_name: profile?.full_name ?? "—",
         email: profile?.email ?? null,
         avatar_url: profile?.avatar_url ?? null,

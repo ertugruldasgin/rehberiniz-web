@@ -16,6 +16,7 @@ export interface UserData {
   full_name: string;
   avatar_url: string | null;
   role: UserRole;
+  title: string | null;
   organization_id: string | null;
   organization_name: string | null;
   email: string;
@@ -48,7 +49,9 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, role, is_active, last_sign_in_at")
+      .select(
+        "id, full_name, avatar_url, role, title, is_active, last_sign_in_at",
+      )
       .eq("id", user.id)
       .single();
 

@@ -105,11 +105,18 @@ export async function POST(req: NextRequest) {
         student_number: student_number || null,
         grade: grade || null,
         branch: branch || null,
-        organization_id: member.organization_id,
         user_id: newUser.user.id,
+        organization_id: member.organization_id,
         teacher_id: teacherId,
       });
     if (studentError) throw studentError;
+
+    // 4. Profiles'a title ekle
+    const { error: titleError } = await adminSupabase
+      .from("profiles")
+      .update({ title: "Öğrenci" })
+      .eq("id", newUser.user.id);
+    if (titleError) throw titleError;
 
     return NextResponse.json({ success: true });
   } catch (err) {

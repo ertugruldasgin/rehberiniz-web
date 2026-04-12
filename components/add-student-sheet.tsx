@@ -207,8 +207,8 @@ export function AddStudentSheet({
                         >
                           {t.full_name}
                           {t.title && (
-                            <span className="text-muted-foreground ml-1">
-                              — {t.title}
+                            <span className="text-muted-foreground">
+                              {t.title}
                             </span>
                           )}
                         </SelectItem>

@@ -284,7 +284,7 @@ export default function ProfilePage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  {userData?.email}
+                  {userData?.title}
                 </p>
               </div>
             </div>
