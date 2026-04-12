@@ -74,15 +74,7 @@ export function ExamResultsTable({
   type,
   className,
 }: ExamResultsTableProps) {
-  if (results.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-        {type === "general"
-          ? "Henüz genel deneme sonucu bulunmuyor."
-          : "Henüz branş denemesi sonucu bulunmuyor."}
-      </div>
-    );
-  }
+  if (results.length === 0) return null;
 
   if (type === "branch")
     return <BranchResultsTable results={results} className={className} />;
@@ -105,13 +97,13 @@ function GeneralResultsTable({
   return (
     <div
       ref={containerRef}
-      className={cn("rounded-xl border overflow-hidden", className)}
+      className={cn("rounded-lg overflow-hidden", className)}
     >
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
-            <TableHead className="sticky left-0 z-10 min-w-[140px] bg-muted/40">
-              Sınav
+            <TableHead className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
+              Deneme Adı
             </TableHead>
             {subjects.map((subject) => (
               <TableHead
@@ -128,19 +120,19 @@ function GeneralResultsTable({
           </TableRow>
           {!isCompact && (
             <TableRow className="border-border bg-muted/20">
-              <TableHead className="sticky left-0 z-10 bg-muted/20" />
+              <TableHead className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]" />
               {[...subjects, "Toplam"].map((name) => (
                 <SubHeaders key={`sub-${name}`} />
               ))}
             </TableRow>
           )}
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg-card">
           {results.map((result) => (
             <TableRow key={result.id} className="border-border">
-              <TableCell className="sticky left-0 z-10 bg-card font-medium">
+              <TableCell className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm leading-tight">
+                  <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
                   <span className="text-xs text-muted-foreground">
@@ -198,12 +190,13 @@ function BranchResultsTable({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-xl border overflow-hidden", className)}>
+    <div className={cn("rounded-lg overflow-hidden", className)}>
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
-            <TableHead className="min-w-[140px]">Sınav</TableHead>
-            <TableHead className="text-center">Ders</TableHead>
+            <TableHead className="w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
+              Deneme Adı
+            </TableHead>
             <TableHead className="text-center text-xs font-normal text-green-600 dark:text-green-400">
               D
             </TableHead>
@@ -216,21 +209,18 @@ function BranchResultsTable({
             <TableHead className="text-center">Net</TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        <TableBody className="bg-card">
           {results.map((result) => (
             <TableRow key={result.id} className="border-border">
-              <TableCell className="font-medium">
+              <TableCell className="w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
                 <div className="flex flex-col gap-0.5">
-                  <span className="text-sm leading-tight">
+                  <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {formatDate(result.exam_date)}
                   </span>
                 </div>
-              </TableCell>
-              <TableCell className="text-center text-sm">
-                {result.subjects[0]?.subject_name ?? "—"}
               </TableCell>
               <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">
                 {result.subjects[0]?.correct ?? 0}

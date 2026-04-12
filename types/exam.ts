@@ -11,6 +11,7 @@ export interface ExamResult {
   exam_name: string;
   exam_date: string;
   is_standalone: boolean;
+  category: string;
   subjects: SubjectResult[];
   total_correct: number;
   total_incorrect: number;

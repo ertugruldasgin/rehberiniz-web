@@ -5,6 +5,7 @@ import { useStudent } from "@/hooks/use-student";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
 import { ExamResultsTable } from "@/components/exam-results-table";
 import {
   ArrowLeftIcon,
@@ -15,6 +16,7 @@ import {
   HashIcon,
   CalendarIcon,
   BookOpenIcon,
+  SearchIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -24,6 +26,20 @@ import { EditStudentDialog } from "@/components/edit-student-dialog";
 import { DeleteStudentDialog } from "@/components/delete-student-dialog";
 
 type Tab = "general" | "exams" | "notes";
+type ExamView = "general" | "branch";
+
+function groupByCategory<T extends { category: string }>(
+  items: T[],
+): Record<string, T[]> {
+  return items.reduce(
+    (acc, r) => {
+      if (!acc[r.category]) acc[r.category] = [];
+      acc[r.category].push(r);
+      return acc;
+    },
+    {} as Record<string, T[]>,
+  );
+}
 
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +48,8 @@ export default function StudentDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("general");
+  const [examView, setExamView] = useState<ExamView>("general");
+  const [examSearch, setExamSearch] = useState("");
   const { results: examResults, loading: examLoading } = useExamResults(id);
 
   const initials = student
@@ -46,7 +64,15 @@ export default function StudentDetailPage() {
       })
     : "";
 
-  // Skeleton
+  const generalResults = examResults.filter((r) => !r.is_standalone);
+  const branchResults = examResults.filter((r) => r.is_standalone);
+  const currentResults =
+    examView === "general" ? generalResults : branchResults;
+  const filteredResults = currentResults.filter((r) =>
+    r.category.toLowerCase().includes(examSearch.toLowerCase()),
+  );
+  const grouped = groupByCategory(filteredResults);
+
   if (loading) {
     return (
       <div className="w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
@@ -131,11 +157,10 @@ export default function StudentDetailPage() {
 
       {/* Ana grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        {/* SOL — Profil kartı */}
+        {/* SOL */}
         <div className="xl:col-span-1 space-y-4">
           <div className="hidden xl:block h-[42px]" />
           <div className="rounded-2xl border bg-card p-5">
-            {/* Avatar + isim yan yana */}
             <div className="flex items-center gap-4">
               <Avatar className="h-16 w-16 rounded-xl ring-1 ring-border shrink-0">
                 <AvatarImage
@@ -168,7 +193,6 @@ export default function StudentDetailPage() {
             </div>
           </div>
 
-          {/* Hesap bilgileri */}
           <div className="rounded-2xl border bg-card p-4 space-y-3">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Hesap Bilgileri
@@ -217,9 +241,8 @@ export default function StudentDetailPage() {
           </div>
         </div>
 
-        {/* SAĞ — Tab alanı */}
+        {/* SAĞ */}
         <div className="xl:col-span-2 space-y-4">
-          {/* Tab başlıkları */}
           <div className="flex items-center gap-1 border-b">
             <TabButton
               active={activeTab === "general"}
@@ -241,65 +264,48 @@ export default function StudentDetailPage() {
             </TabButton>
           </div>
 
-          {/* Tab içerikleri */}
           {activeTab === "general" && (
-            <>
-              {/* Genel Bilgiler */}
-              <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
+            <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
+              <div className="flex items-center gap-2">
+                <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
+              </div>
+              <Separator />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
-                  </div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
+                  <p className="text-sm font-medium">{student.first_name}</p>
                 </div>
-                <Separator />
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
-                    <p className="text-sm font-medium">{student.first_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      Soyad
-                    </p>
-                    <p className="text-sm font-medium">{student.last_name}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      E-posta
-                    </p>
-                    <p className="text-sm font-medium">
-                      {student.email ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      Öğrenci No
-                    </p>
-                    <p className="text-sm font-medium">
-                      {student.student_number ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      Sınıf
-                    </p>
-                    <p className="text-sm font-medium">
-                      {student.grade ?? "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      Alan / Şube
-                    </p>
-                    <p className="text-sm font-medium">
-                      {student.branch ?? "—"}
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
+                  <p className="text-sm font-medium">{student.last_name}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    E-posta
+                  </p>
+                  <p className="text-sm font-medium">{student.email ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    Öğrenci No
+                  </p>
+                  <p className="text-sm font-medium">
+                    {student.student_number ?? "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">Sınıf</p>
+                  <p className="text-sm font-medium">{student.grade ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    Alan / Şube
+                  </p>
+                  <p className="text-sm font-medium">{student.branch ?? "—"}</p>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "exams" &&
@@ -313,10 +319,76 @@ export default function StudentDetailPage() {
                 ))}
               </div>
             ) : (
-              <ExamResultsTable results={examResults} />
+              <div className="space-y-4">
+                {/* Pill + Search */}
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1 p-1 rounded-xl bg-muted shrink-0">
+                    {(["general", "branch"] as ExamView[]).map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setExamView(type);
+                          setExamSearch("");
+                        }}
+                        className={cn(
+                          "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
+                          examView === type
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {type === "general" ? "Genel" : "Branş"}
+                        <span
+                          className={cn(
+                            "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
+                            examView === type
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-muted/50 text-muted-foreground/70",
+                          )}
+                        >
+                          {type === "general"
+                            ? generalResults.length
+                            : branchResults.length}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="relative flex-1 min-w-[160px] max-w-[360px]">
+                    <div className="relative">
+                      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Input
+                        placeholder="Kategori ara..."
+                        value={examSearch}
+                        onChange={(e) => setExamSearch(e.target.value)}
+                        className="pl-9 h-10 bg-card border rounded-xl"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* İçerik */}
+                {Object.keys(grouped).length === 0 ? (
+                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                    {examSearch
+                      ? "Arama sonucu bulunamadı."
+                      : examView === "general"
+                        ? "Henüz genel deneme sonucu bulunmuyor."
+                        : "Henüz branş denemesi sonucu bulunmuyor."}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {Object.entries(grouped).map(([category, results]) => (
+                      <div key={category} className="space-y-2">
+                        <p className="text-sm font-semibold">{category}</p>
+                        <ExamResultsTable results={results} type={examView} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
 
-          {/* Rehberlik Notları — placeholder */}
           {activeTab === "notes" && (
             <div className="rounded-2xl border border-dashed bg-card/50 p-6 flex flex-col items-center gap-2 text-center">
               <BookOpenIcon className="h-6 w-6 text-muted-foreground/30" />
@@ -334,9 +406,6 @@ export default function StudentDetailPage() {
   );
 }
 
-// ——————————————————————————————————————————————
-// Tab butonu
-// ——————————————————————————————————————————————
 function TabButton({
   active = false,
   disabled = false,

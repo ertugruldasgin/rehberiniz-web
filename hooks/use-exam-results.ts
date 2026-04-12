@@ -10,29 +10,35 @@ async function fetchResults(
     .from("exam_results")
     .select(
       `
-      id,
-      total_correct,
-      total_incorrect,
-      total_empty,
-      total_net,
-      exams (
-        title,
-        date,
-        is_official,
-        exam_template_id,
-        subject_id
+    id,
+    total_correct,
+    total_incorrect,
+    total_empty,
+    total_net,
+    exams (
+      title,
+      date,
+      is_official,
+      exam_template_id,
+      subject_id,
+      exam_templates (
+        category
       ),
-      subject_results (
-        correct,
-        incorrect,
-        empty,
-        net,
-        is_standalone,
-        subjects (
-          name
-        )
+      subjects (
+        category
       )
-    `,
+    ),
+    subject_results (
+      correct,
+      incorrect,
+      empty,
+      net,
+      is_standalone,
+      subjects (
+        name
+      )
+    )
+  `,
     )
     .eq("student_id", studentId)
     .order("created_at", { ascending: false });
@@ -45,11 +51,17 @@ async function fetchResults(
     const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
     const isBranch = !exam?.exam_template_id && !!exam?.subject_id;
 
+    const firstSubject = r.subject_results?.[0];
+    const category = isBranch
+      ? (firstSubject?.subjects?.name ?? "Diğer")
+      : (exam?.exam_templates?.category ?? "Diğer");
+
     return {
       id: r.id,
       exam_name: exam?.title ?? "—",
       exam_date: exam?.date ?? "",
       is_standalone: isBranch,
+      category,
       total_correct: r.total_correct,
       total_incorrect: r.total_incorrect,
       total_empty: r.total_empty,

@@ -6,8 +6,21 @@ import { Button } from "@/components/ui/button";
 import { ExamResultsTable } from "@/components/exam-results-table";
 import { AddExamResultDialog } from "@/components/add-exam-result-dialog";
 import { useMyExamResults } from "@/hooks/use-exam-results";
+import type { ExamResult } from "@/types/exam";
 
 type ViewType = "general" | "branch";
+
+function groupByCategory(results: ExamResult[]): Record<string, ExamResult[]> {
+  return results.reduce(
+    (acc, r) => {
+      const key = r.category;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(r);
+      return acc;
+    },
+    {} as Record<string, ExamResult[]>,
+  );
+}
 
 export default function ExamResultsPage() {
   const { results, loading, error, refetch } = useMyExamResults();
@@ -17,6 +30,7 @@ export default function ExamResultsPage() {
   const generalResults = results.filter((r) => !r.is_standalone);
   const branchResults = results.filter((r) => r.is_standalone);
   const filtered = view === "general" ? generalResults : branchResults;
+  const grouped = groupByCategory(filtered);
 
   return (
     <div className="flex flex-col px-4 md:px-6 space-y-6">
@@ -49,7 +63,7 @@ export default function ExamResultsPage() {
                 : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {type === "general" ? `Genel Denemeler` : `Branş Denemeleri`}
+            {type === "general" ? "Genel Denemeler" : "Branş Denemeleri"}
             {!loading && (
               <span
                 className={cn(
@@ -70,17 +84,45 @@ export default function ExamResultsPage() {
 
       {/* İçerik */}
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-12 rounded-xl bg-muted animate-pulse" />
+        <div className="space-y-6">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-5 w-32 rounded-lg bg-muted animate-pulse" />
+              <div className="space-y-3">
+                {[...Array(3)].map((_, j) => (
+                  <div
+                    key={j}
+                    className="h-12 rounded-xl bg-muted animate-pulse"
+                  />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-12 text-sm text-destructive">
           {error}
         </div>
+      ) : Object.keys(grouped).length === 0 ? (
+        <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+          {view === "general"
+            ? "Henüz genel deneme sonucu bulunmuyor."
+            : "Henüz branş denemesi sonucu bulunmuyor."}
+        </div>
       ) : (
-        <ExamResultsTable results={filtered} type={view} />
+        <div className="space-y-8">
+          {Object.entries(grouped).map(([category, categoryResults]) => (
+            <div key={category} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold">{category}</h2>
+                <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted">
+                  {categoryResults.length}
+                </span>
+              </div>
+              <ExamResultsTable results={categoryResults} type={view} />
+            </div>
+          ))}
+        </div>
       )}
 
       <AddExamResultDialog
