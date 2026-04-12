@@ -13,44 +13,37 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { UserIcon, BriefcaseIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { UserIcon, MailIcon, BriefcaseIcon } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import type { TeacherDetail } from "@/hooks/use-teacher";
 
-interface EditTeacherDialogProps {
+interface AddTeacherDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  teacher: TeacherDetail;
 }
 
-const EMPTY_ERRORS = {
+const EMPTY_FORM = {
   full_name: "",
+  email: "",
+  password: "",
+  title: "",
 };
 
-export function EditTeacherDialog({
+const EMPTY_ERRORS: Record<string, string> = {
+  full_name: "",
+  email: "",
+  password: "",
+};
+
+export function AddTeacherDialog({
   open,
   onOpenChange,
   onSuccess,
-  teacher,
-}: EditTeacherDialogProps) {
-  const [form, setForm] = useState({
-    full_name: "",
-    title: "",
-  });
+}: AddTeacherDialogProps) {
+  const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState(EMPTY_ERRORS);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (open && teacher) {
-      setForm({
-        full_name: teacher.full_name,
-        title: teacher.title ?? "",
-      });
-      setErrors(EMPTY_ERRORS);
-    }
-  }, [open, teacher]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
@@ -63,32 +56,47 @@ export function EditTeacherDialog({
   function validate() {
     const newErrors = { ...EMPTY_ERRORS };
     let valid = true;
+
     if (!form.full_name.trim()) {
       newErrors.full_name = "Ad Soyad zorunludur.";
       valid = false;
     }
+    if (!form.email.trim()) {
+      newErrors.email = "E-posta zorunludur.";
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      newErrors.email = "Geçerli bir e-posta adresi girin.";
+      valid = false;
+    }
+    if (!form.password) {
+      newErrors.password = "Şifre zorunludur.";
+      valid = false;
+    } else if (form.password.length < 8) {
+      newErrors.password = "Şifre en az 8 karakter olmalıdır.";
+      valid = false;
+    }
+
     setErrors(newErrors);
     return valid;
   }
 
   async function submitForm() {
     if (!validate()) return;
+
     setLoading(true);
     try {
-      const res = await fetch("/api/teachers/update", {
+      const res = await fetch("/api/teachers/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          teacher_member_id: teacher.id,
-          full_name: form.full_name.trim(),
-          title: form.title.trim() || null,
-        }),
+        body: JSON.stringify(form),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Bir hata oluştu.");
 
-      toast.success("Öğretmen bilgileri güncellendi.");
+      toast.success("Öğretmen başarıyla eklendi.");
+      setForm(EMPTY_FORM);
+      setErrors(EMPTY_ERRORS);
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
@@ -99,6 +107,7 @@ export function EditTeacherDialog({
   }
 
   function handleClose() {
+    setForm(EMPTY_FORM);
     setErrors(EMPTY_ERRORS);
     onOpenChange(false);
   }
@@ -107,18 +116,22 @@ export function EditTeacherDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl p-0 pb-2 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
-          <DialogTitle className="text-lg font-bold">
-            Öğretmeni Düzenle
-          </DialogTitle>
+          <DialogTitle className="text-lg font-bold">Öğretmen Ekle</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            Öğretmenin bilgilerini güncelleyin.{" "}
+            Yeni öğretmenin bilgilerini girin.{" "}
             <span className="text-destructive">*</span> ile işaretli alanlar
             zorunludur.
           </DialogDescription>
         </DialogHeader>
 
         <ScrollArea className="max-h-[65vh]">
-          <div className="px-6 py-6 space-y-7">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitForm();
+            }}
+            className="px-6 py-6 space-y-7"
+          >
             {/* Kişisel Bilgiler */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
@@ -128,15 +141,15 @@ export function EditTeacherDialog({
               <Separator />
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit_full_name">
+                  <Label htmlFor="full_name">
                     Ad Soyad <span className="text-destructive">*</span>
                   </Label>
                   <Input
-                    id="edit_full_name"
+                    id="full_name"
                     name="full_name"
                     value={form.full_name}
                     onChange={handleChange}
-                    placeholder="Ahmet Yılmaz"
+                    placeholder="Ad Soyad"
                     className={`h-10 ${errors.full_name ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
                     disabled={loading}
                   />
@@ -146,14 +159,58 @@ export function EditTeacherDialog({
                     </p>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Hesap Bilgileri */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <MailIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm font-semibold">Hesap Bilgileri</p>
+              </div>
+              <Separator />
+              <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>E-posta</Label>
-                  <div className="flex h-10 items-center rounded-md border bg-muted/50 px-3 text-sm text-muted-foreground">
-                    {teacher.email ?? "—"}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    E-posta adresi değiştirilemez.
-                  </p>
+                  <Label htmlFor="email">
+                    E-posta <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    placeholder="ad.soyad@kurum.com"
+                    className={`h-10 ${errors.email ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
+                    disabled={loading}
+                  />
+                  {errors.email && (
+                    <p className="text-xs text-destructive">{errors.email}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">
+                    Şifre <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    placeholder="••••••••"
+                    className={`h-10 ${errors.password ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
+                    disabled={loading}
+                  />
+                  {errors.password ? (
+                    <p className="text-xs text-destructive">
+                      {errors.password}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Öğretmen bu e-posta ve şifre ile sisteme giriş yapacak.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -166,22 +223,22 @@ export function EditTeacherDialog({
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label htmlFor="edit_title">Unvan</Label>
+                <Label htmlFor="title">Unvan</Label>
                 <Input
-                  id="edit_title"
+                  id="title"
                   name="title"
                   value={form.title}
                   onChange={handleChange}
-                  placeholder="Matematik Öğretmeni"
+                  placeholder="Unvan"
                   className="h-10"
                   disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Öğretmenin branşı veya unvanı.
+                  Öğretmenin branşı veya unvanı. İsteğe bağlı.
                 </p>
               </div>
             </div>
-          </div>
+          </form>
         </ScrollArea>
 
         <DialogFooter className="px-6 py-4 border-t bg-card shrink-0">
@@ -198,9 +255,9 @@ export function EditTeacherDialog({
             type="button"
             onClick={submitForm}
             disabled={loading}
-            className="cursor-pointer"
+            className="hover:bg-primary/90 cursor-pointer"
           >
-            {loading ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+            {loading ? "Kaydediliyor..." : "Öğretmen Ekle"}
           </Button>
         </DialogFooter>
       </DialogContent>

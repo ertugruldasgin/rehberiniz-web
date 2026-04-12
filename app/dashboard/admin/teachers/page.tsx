@@ -12,10 +12,12 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/page-header";
+import { AddTeacherDialog } from "@/components/add-teacher-sheet";
 
 export default function TeachersPage() {
-  const { teachers, loading, error } = useTeachers();
+  const { teachers, loading, error, refetch } = useTeachers();
   const [search, setSearch] = useState("");
+  const [addOpen, setAddOpen] = useState(false);
   const router = useRouter();
 
   const filtered = useMemo(() => {
@@ -81,7 +83,7 @@ export default function TeachersPage() {
 
       <div className="rounded-2xl bg-card overflow-hidden">
         {/* Arama */}
-        <div className="p-4 border-b bg-muted/80 flex items-center gap-3">
+        <div className="p-4 border-b bg-muted/80 flex items-center justify-between gap-3">
           <div className="relative flex-1 max-w-sm">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -91,7 +93,19 @@ export default function TeachersPage() {
               className="pl-9 h-10 bg-card"
             />
           </div>
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="cursor-pointer shrink-0"
+          >
+            <span className="hidden sm:inline">Öğretmen Ekle</span>
+            <span className="sm:hidden">+</span>
+          </Button>
         </div>
+        <AddTeacherDialog
+          open={addOpen}
+          onOpenChange={setAddOpen}
+          onSuccess={refetch}
+        />
 
         {/* Tablo */}
         {filtered.length === 0 ? (
