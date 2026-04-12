@@ -12,7 +12,7 @@ export interface Student {
   is_active: boolean;
 }
 
-export function useStudents() {
+export function useStudents(teacherMemberId?: string) {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +59,9 @@ export function useStudents() {
         .order("first_name");
 
       // Admin ise tüm organizasyonun öğrencileri, teacher ise sadece kendi öğrencileri
-      if (isAdmin) {
+      if (isAdmin && teacherMemberId) {
+        query = query.eq("teacher_id", teacherMemberId);
+      } else if (isAdmin) {
         query = query.eq("organization_id", member.organization_id);
       } else {
         query = query.eq("teacher_id", member.id);

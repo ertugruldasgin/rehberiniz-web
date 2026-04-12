@@ -24,25 +24,6 @@ import { StudentsTable } from "@/components/students-table";
 import { AddStudentSheet } from "@/components/add-student-sheet";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { EditTeacherDialog } from "@/components/edit-teacher-dialog";
 import { DeleteTeacherDialog } from "@/components/delete-teacher-dialog";
 
@@ -56,7 +37,7 @@ export default function TeacherDetailPage() {
     students,
     loading: studentsLoading,
     refetch: refetchStudents,
-  } = useStudents();
+  } = useStudents(id);
   const [activeTab, setActiveTab] = useState<Tab>("students");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
