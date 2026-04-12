@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getNavItems } from "@/lib/navigation";
-import { useUserRole } from "@/hooks/use-user-tole";
+import { useUserRole } from "@/hooks/use-user-role";
 import { tr } from "date-fns/locale";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

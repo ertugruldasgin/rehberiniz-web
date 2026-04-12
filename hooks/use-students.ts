@@ -27,14 +27,22 @@ export function useStudents() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Kullanıcı bulunamadı.");
 
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
       const { data: member, error: memberError } = await supabase
         .from("organization_members")
-        .select("id")
+        .select("id, organization_id")
         .eq("user_id", user.id)
         .single();
       if (memberError) throw memberError;
 
-      const { data, error: studentsError } = await supabase
+      const isAdmin = profile?.role === "admin";
+
+      let query = supabase
         .from("students")
         .select(
           `
@@ -47,8 +55,16 @@ export function useStudents() {
           profiles!students_user_id_fkey1 (avatar_url)
         `,
         )
-        .eq("teacher_id", member.id)
         .order("first_name");
+
+      // Admin ise tüm organizasyonun öğrencileri, teacher ise sadece kendi öğrencileri
+      if (isAdmin) {
+        query = query.eq("organization_id", member.organization_id);
+      } else {
+        query = query.eq("teacher_id", member.id);
+      }
+
+      const { data, error: studentsError } = await query;
       if (studentsError) throw studentsError;
 
       const mapped = (data ?? []).map((s: any) => ({

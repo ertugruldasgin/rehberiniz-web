@@ -17,7 +17,9 @@ export interface UserData {
   avatar_url: string | null;
   role: UserRole;
   organization_id: string | null;
+  organization_name: string | null;
   email: string;
+  is_active: boolean;
 }
 
 interface UserRoleContextValue {
@@ -45,7 +47,7 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id, full_name, avatar_url, role")
+      .select("id, full_name, avatar_url, role, is_active")
       .eq("id", user.id)
       .single();
 
@@ -56,14 +58,16 @@ export function UserRoleProvider({ children }: { children: React.ReactNode }) {
 
     const { data: member } = await supabase
       .from("organization_members")
-      .select("organization_id")
+      .select("organization_id, organizations(name)")
       .eq("user_id", user.id)
       .maybeSingle();
 
     setUserData({
       ...profile,
       organization_id: member?.organization_id ?? null,
+      organization_name: (member?.organizations as any)?.name ?? null,
       email: user.email ?? "",
+      is_active: profile.is_active ?? true,
     });
 
     setLoading(false);

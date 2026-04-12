@@ -77,19 +77,19 @@ export default function StudentDetailPage() {
     return (
       <div className="w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
         <div className="h-8 w-32 rounded-lg bg-muted animate-pulse" />
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <div className="rounded-2xl border bg-card p-6 space-y-4">
-            <div className="flex flex-col items-center gap-3">
-              <div className="h-24 w-24 rounded-2xl bg-muted animate-pulse" />
-              <div className="h-5 w-36 rounded-lg bg-muted animate-pulse" />
-              <div className="h-4 w-24 rounded-lg bg-muted animate-pulse" />
+        <div className="rounded-2xl border bg-card p-5 space-y-4">
+          <div className="flex items-center gap-4">
+            <div className="h-16 w-16 rounded-xl bg-muted animate-pulse shrink-0" />
+            <div className="space-y-2 flex-1">
+              <div className="h-5 w-40 rounded-lg bg-muted animate-pulse" />
+              <div className="h-4 w-56 rounded-lg bg-muted animate-pulse" />
             </div>
           </div>
-          <div className="xl:col-span-2 rounded-2xl border bg-card p-6 space-y-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-12 rounded-xl bg-muted animate-pulse" />
-            ))}
-          </div>
+        </div>
+        <div className="rounded-2xl border bg-card p-6 space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-12 rounded-xl bg-muted animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -155,252 +155,230 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
-      {/* Ana grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
-        {/* SOL */}
-        <div className="xl:col-span-1 space-y-4">
-          <div className="hidden xl:block h-[42px]" />
-          <div className="rounded-2xl border bg-card p-5">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 rounded-xl ring-1 ring-border shrink-0">
-                <AvatarImage
-                  src={student?.avatar_url ?? ""}
-                  alt={student?.first_name ?? ""}
-                  className="rounded-xl"
-                />
-                <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl font-semibold">
-                  {initials || "?"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <h2 className="font-semibold text-base leading-tight truncate">
-                  {student.first_name} {student.last_name}
-                </h2>
-                {student.email && (
-                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                    {student.email}
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {student.grade && (
-                    <Badge variant="secondary">{student.grade}</Badge>
-                  )}
-                  {student.branch && (
-                    <Badge variant="outline">{student.branch}</Badge>
-                  )}
-                </div>
-              </div>
+      {/* Profil Banner — tam genişlik */}
+      <div className="rounded-2xl border bg-card p-4">
+        <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-8 justify-between">
+          {/* Avatar */}
+          <div className="flex flex-row items-center gap-4">
+            <Avatar className="h-24 w-24 rounded-xl ring-1 ring-border shrink-0">
+              <AvatarImage
+                src={student?.avatar_url ?? ""}
+                alt={student?.first_name ?? ""}
+                className="rounded-xl"
+              />
+              <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl font-semibold">
+                {initials || "?"}
+              </AvatarFallback>
+            </Avatar>
+
+            {/* İsim + email */}
+            <div className="flex-1 min-w-0">
+              <h2 className="font-semibold text-lg leading-tight truncate">
+                {student.first_name} {student.last_name}
+              </h2>
+              {student.email && (
+                <p className="text-sm text-muted-foreground mt-0.5 truncate">
+                  {student.email}
+                </p>
+              )}
             </div>
           </div>
 
-          <div className="rounded-2xl border bg-card p-4 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Hesap Bilgileri
-            </p>
-            <div className="space-y-3">
-              {student.student_number && (
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <HashIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">
-                      Öğrenci No
-                    </p>
-                    <p className="text-xs font-medium">
-                      {student.student_number}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {student.email && (
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                    <MailIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-muted-foreground">E-posta</p>
-                    <p className="text-xs font-medium truncate">
-                      {student.email}
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Kayıt Tarihi
-                  </p>
-                  <p className="text-xs font-medium">{createdAt}</p>
-                </div>
+          {/* Sağ taraf — özet bilgiler */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-3">
+            {student.grade && (
+              <div>
+                <p className="text-[11px] text-muted-foreground">Sınıf</p>
+                <p className="text-sm font-medium">{student.grade}</p>
               </div>
+            )}
+            {student.branch && (
+              <div>
+                <p className="text-[11px] text-muted-foreground">Alan</p>
+                <p className="text-sm font-medium">{student.branch}</p>
+              </div>
+            )}
+            {student.student_number && (
+              <div>
+                <p className="text-[11px] text-muted-foreground">Öğrenci No</p>
+                <p className="text-sm font-medium">{student.student_number}</p>
+              </div>
+            )}
+            <div>
+              <p className="text-[11px] text-muted-foreground">Kayıt Tarihi</p>
+              <p className="text-sm font-medium">{createdAt}</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* SAĞ */}
-        <div className="xl:col-span-2 space-y-4">
-          <div className="flex items-center gap-1 border-b">
-            <TabButton
-              active={activeTab === "general"}
-              onClick={() => setActiveTab("general")}
-            >
-              Genel Bilgiler
-            </TabButton>
-            <TabButton
-              active={activeTab === "exams"}
-              onClick={() => setActiveTab("exams")}
-            >
-              Sınav Sonuçları
-            </TabButton>
-            <TabButton disabled>
-              Rehberlik Notları
-              <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-                Yakında
-              </Badge>
-            </TabButton>
-          </div>
+      {/* İçerik — tam genişlik */}
+      <div className="space-y-4">
+        {/* Tab başlıkları */}
+        <div className="flex items-center gap-1 border-b">
+          <TabButton
+            active={activeTab === "general"}
+            onClick={() => setActiveTab("general")}
+          >
+            Genel Bilgiler
+          </TabButton>
+          <TabButton
+            active={activeTab === "exams"}
+            onClick={() => setActiveTab("exams")}
+          >
+            Sınav Sonuçları
+          </TabButton>
+          <TabButton disabled>
+            Rehberlik Notları
+            <Badge variant="outline" className="text-[10px] py-0 px-1.5">
+              Yakında
+            </Badge>
+          </TabButton>
+        </div>
 
-          {activeTab === "general" && (
-            <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
-              <div className="flex items-center gap-2">
-                <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
+        {/* Genel Bilgiler */}
+        {activeTab === "general" && (
+          <div className="rounded-2xl border bg-card p-5 sm:p-6 space-y-5">
+            <div className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+              <h2 className="text-sm font-semibold">Kişisel Bilgiler</h2>
+            </div>
+            <Separator />
+            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-5">
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
+                <p className="text-sm font-medium">{student.first_name}</p>
               </div>
-              <Separator />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
-                  <p className="text-sm font-medium">{student.first_name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
-                  <p className="text-sm font-medium">{student.last_name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">
-                    E-posta
-                  </p>
-                  <p className="text-sm font-medium">{student.email ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">
-                    Öğrenci No
-                  </p>
-                  <p className="text-sm font-medium">
-                    {student.student_number ?? "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Sınıf</p>
-                  <p className="text-sm font-medium">{student.grade ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">
-                    Alan / Şube
-                  </p>
-                  <p className="text-sm font-medium">{student.branch ?? "—"}</p>
-                </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
+                <p className="text-sm font-medium">{student.last_name}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">E-posta</p>
+                <p className="text-sm font-medium truncate">
+                  {student.email ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">
+                  Öğrenci No
+                </p>
+                <p className="text-sm font-medium">
+                  {student.student_number ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">Sınıf</p>
+                <p className="text-sm font-medium">{student.grade ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">
+                  Alan / Şube
+                </p>
+                <p className="text-sm font-medium">{student.branch ?? "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">
+                  Kayıt Tarihi
+                </p>
+                <p className="text-sm font-medium">{createdAt}</p>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {activeTab === "exams" &&
-            (examLoading ? (
-              <div className="space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-12 rounded-xl bg-muted animate-pulse"
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Pill + Search */}
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1 p-1 rounded-xl bg-muted shrink-0">
-                    {(["general", "branch"] as ExamView[]).map((type) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => {
-                          setExamView(type);
-                          setExamSearch("");
-                        }}
+        {/* Sınav Sonuçları */}
+        {activeTab === "exams" &&
+          (examLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-12 rounded-xl bg-muted animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Pill + Search */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-muted shrink-0">
+                  {(["general", "branch"] as ExamView[]).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        setExamView(type);
+                        setExamSearch("");
+                      }}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
+                        examView === type
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {type === "general" ? "Genel" : "Branş"}
+                      <span
                         className={cn(
-                          "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
+                          "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
                           examView === type
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-muted/50 text-muted-foreground/70",
                         )}
                       >
-                        {type === "general" ? "Genel" : "Branş"}
-                        <span
-                          className={cn(
-                            "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
-                            examView === type
-                              ? "bg-muted text-muted-foreground"
-                              : "bg-muted/50 text-muted-foreground/70",
-                          )}
-                        >
-                          {type === "general"
-                            ? generalResults.length
-                            : branchResults.length}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="relative flex-1 min-w-[160px] max-w-[360px]">
-                    <div className="relative">
-                      <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                      <Input
-                        placeholder="Kategori ara..."
-                        value={examSearch}
-                        onChange={(e) => setExamSearch(e.target.value)}
-                        className="pl-9 h-10 bg-card border rounded-xl"
-                      />
-                    </div>
-                  </div>
+                        {type === "general"
+                          ? generalResults.length
+                          : branchResults.length}
+                      </span>
+                    </button>
+                  ))}
                 </div>
-
-                {/* İçerik */}
-                {Object.keys(grouped).length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                    {examSearch
-                      ? "Arama sonucu bulunamadı."
-                      : examView === "general"
-                        ? "Henüz genel deneme sonucu bulunmuyor."
-                        : "Henüz branş denemesi sonucu bulunmuyor."}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {Object.entries(grouped).map(([category, results]) => (
-                      <div key={category} className="space-y-2">
-                        <p className="text-sm font-semibold">{category}</p>
-                        <ExamResultsTable results={results} type={examView} />
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className="relative flex-1 min-w-[160px] max-w-[360px]">
+                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="Kategori ara..."
+                    value={examSearch}
+                    onChange={(e) => setExamSearch(e.target.value)}
+                    className="pl-9 h-10 bg-card border rounded-xl"
+                  />
+                </div>
               </div>
-            ))}
 
-          {activeTab === "notes" && (
-            <div className="rounded-2xl border border-dashed bg-card/50 p-6 flex flex-col items-center gap-2 text-center">
-              <BookOpenIcon className="h-6 w-6 text-muted-foreground/30" />
-              <p className="text-sm font-medium text-muted-foreground/50">
-                Rehberlik Notları
-              </p>
-              <p className="text-xs text-muted-foreground/40">
-                Bu bölüm yakında eklenecek.
-              </p>
+              {/* İçerik */}
+              {Object.keys(grouped).length === 0 ? (
+                <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                  {examSearch
+                    ? "Arama sonucu bulunamadı."
+                    : examView === "general"
+                      ? "Henüz genel deneme sonucu bulunmuyor."
+                      : "Henüz branş denemesi sonucu bulunmuyor."}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(grouped).map(([category, results]) => (
+                    <div key={category} className="space-y-2">
+                      <p className="text-sm font-semibold">{category}</p>
+                      <ExamResultsTable results={results} type={examView} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          ))}
+
+        {/* Rehberlik Notları */}
+        {activeTab === "notes" && (
+          <div className="rounded-2xl border border-dashed bg-card/50 p-10 flex flex-col items-center gap-2 text-center">
+            <BookOpenIcon className="h-7 w-7 text-muted-foreground/30" />
+            <p className="text-sm font-medium text-muted-foreground/50">
+              Rehberlik Notları
+            </p>
+            <p className="text-xs text-muted-foreground/40">
+              Bu bölüm yakında eklenecek.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

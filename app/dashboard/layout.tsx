@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { UserRoleProvider } from "@/hooks/use-user-tole";
+import { UserRoleProvider } from "@/hooks/use-user-role";
 
 export default function StudentLayout({
   children,

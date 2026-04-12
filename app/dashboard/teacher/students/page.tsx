@@ -13,9 +13,12 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { AddStudentSheet } from "@/components/add-student-sheet";
+import { PageHeader } from "@/components/page-header";
+import { useUserRole } from "@/hooks/use-user-role";
 
 export default function StudentsPage() {
   const { students, loading, error, refetch } = useStudents();
+  const { userData } = useUserRole();
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
   const router = useRouter();
@@ -38,7 +41,7 @@ export default function StudentsPage() {
   // Skeleton
   if (loading) {
     return (
-      <div className="w-full px-4 md:px-6 py-6 md:py-8 space-y-6">
+      <div className="w-full px-4 md:px-6 space-y-6">
         <div className="space-y-2">
           <div className="h-8 w-44 rounded-lg bg-muted animate-pulse" />
           <div className="h-4 w-72 rounded-lg bg-muted animate-pulse" />
@@ -69,31 +72,15 @@ export default function StudentsPage() {
 
   return (
     <div className="w-full px-4 md:px-6 space-y-6">
-      {/* Başlık */}
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Öğrenciler</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Toplam {students.length} öğrenci listeleniyor.
-          </p>
-        </div>
-        <Button
-          onClick={() => setSheetOpen(true)}
-          className="hover:bg-primary/90 hover:cursor-pointer"
-        >
-          Öğrenci Ekle
-        </Button>
-      </div>
-      <AddStudentSheet
-        open={sheetOpen}
-        onOpenChange={setSheetOpen}
-        onSuccess={refetch}
+      <PageHeader
+        title="Öğrenciler"
+        description={`Toplam ${students.length} öğrenci listeleniyor.`}
       />
 
       {/* Tablo kartı */}
-      <div className="rounded-2xl border bg-card overflow-hidden">
+      <div className="rounded-2xl bg-card overflow-hidden">
         {/* Arama */}
-        <div className="p-4 border-b bg-muted/80">
+        <div className="p-4 border-b bg-muted/80 flex items-center justify-between">
           <div className="relative w-full max-w-sm">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
@@ -103,7 +90,18 @@ export default function StudentsPage() {
               className="pl-9 h-10 bg-card"
             />
           </div>
+          <Button
+            onClick={() => setSheetOpen(true)}
+            className="hover:bg-primary/90 hover:cursor-pointer"
+          >
+            Öğrenci Ekle
+          </Button>
         </div>
+        <AddStudentSheet
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          onSuccess={refetch}
+        />
 
         {/* Tablo */}
         {filtered.length === 0 ? (
@@ -153,7 +151,9 @@ export default function StudentsPage() {
                   <tr
                     key={student.id}
                     onClick={() =>
-                      router.push(`/dashboard/teacher/students/${student.id}`)
+                      router.push(
+                        `/dashboard/${userData?.role}/students/${student.id}`,
+                      )
                     }
                     className="hover:bg-muted/40 transition-colors cursor-pointer group"
                   >

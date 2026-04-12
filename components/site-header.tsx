@@ -3,8 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUserRole } from "@/hooks/use-user-tole";
+import { useUserRole } from "@/hooks/use-user-role";
 
 const pageTitles: Record<string, string> = {
   // Admin

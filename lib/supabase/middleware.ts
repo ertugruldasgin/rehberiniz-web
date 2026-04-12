@@ -63,6 +63,23 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
+    if (
+      pathname.startsWith("/dashboard") &&
+      pathname !== "/dashboard/profile"
+    ) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_active")
+        .eq("id", user.sub)
+        .single();
+
+      if (profile && !profile.is_active) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/dashboard/profile";
+        return NextResponse.redirect(url);
+      }
+    }
+
     const isDashboardRoute = Object.values(roleRoutes)
       .flat()
       .some((route) => pathname.startsWith(route));
