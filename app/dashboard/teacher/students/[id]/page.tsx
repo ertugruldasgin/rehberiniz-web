@@ -18,6 +18,8 @@ import {
   BookOpenIcon,
   SearchIcon,
   UsersIcon,
+  UserXIcon,
+  UserCheckIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +27,9 @@ import { cn } from "@/lib/utils";
 import { useExamResults } from "@/hooks/use-exam-results";
 import { EditStudentDialog } from "@/components/edit-student-dialog";
 import { DeleteStudentDialog } from "@/components/delete-student-dialog";
+import { useUserRole } from "@/hooks/use-user-role";
+import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 type Tab = "general" | "exams" | "notes";
 type ExamView = "general" | "branch";
@@ -45,13 +50,36 @@ function groupByCategory<T extends { category: string }>(
 export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { results: examResults, loading: examLoading } = useExamResults(id);
+  const { userData } = useUserRole();
   const { student, loading, error, refetch } = useStudent(id);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [examView, setExamView] = useState<ExamView>("general");
   const [examSearch, setExamSearch] = useState("");
-  const { results: examResults, loading: examLoading } = useExamResults(id);
+  const [togglingActive, setTogglingActive] = useState(false);
+
+  async function handleToggleActive() {
+    if (!student) return;
+    setTogglingActive(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_active: !student.is_active })
+        .eq("id", student.user_id);
+      if (error) throw error;
+      toast.success(
+        student.is_active ? "Hesap pasife alındı." : "Hesap aktive edildi.",
+      );
+      refetch();
+    } catch {
+      toast.error("Bir hata oluştu.");
+    } finally {
+      setTogglingActive(false);
+    }
+  }
 
   const initials = student
     ? `${student.first_name[0] ?? ""}${student.last_name[0] ?? ""}`.toUpperCase()
@@ -146,6 +174,32 @@ export default function StudentDetailPage() {
             onSuccess={refetch}
             student={student}
           />
+          {(userData?.role === "admin" || userData?.role === "teacher") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleToggleActive}
+              disabled={togglingActive}
+              className={cn(
+                "gap-1.5 cursor-pointer",
+                student.is_active
+                  ? "text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                  : "text-green-600 hover:text-green-600 hover:bg-green-500/10 border-green-500/30",
+              )}
+            >
+              {student.is_active ? (
+                <>
+                  <UserXIcon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Pasife Al</span>
+                </>
+              ) : (
+                <>
+                  <UserCheckIcon className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Aktive Et</span>
+                </>
+              )}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"

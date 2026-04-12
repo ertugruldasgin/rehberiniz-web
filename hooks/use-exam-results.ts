@@ -43,8 +43,6 @@ async function fetchResults(
     .eq("student_id", studentId)
     .order("created_at", { ascending: false });
 
-  console.log("exam_results data:", JSON.stringify(data, null, 2));
-
   if (error) throw error;
 
   return (data ?? []).map((r: any) => {

@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 
 export interface StudentDetail {
   id: string;
+  user_id: string;
   first_name: string;
   last_name: string;
   student_number: string | null;
@@ -31,6 +32,7 @@ export function useStudent(id: string) {
         .select(
           `
           id,
+          user_id,
           first_name,
           last_name,
           student_number,
@@ -47,6 +49,7 @@ export function useStudent(id: string) {
 
       setStudent({
         id: data.id,
+        user_id: data.user_id,
         first_name: data.first_name,
         last_name: data.last_name,
         student_number: data.student_number,
