@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       student_number,
       grade,
       branch,
+      teacher_member_id,
     } = body;
 
     if (!first_name || !last_name || !email || !password) {
@@ -41,8 +42,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Admin ise teacher_member_id zorunlu
+    if (member.role === "admin" && !teacher_member_id) {
+      return NextResponse.json(
+        { error: "Öğretmen seçimi zorunludur." },
+        { status: 400 },
+      );
+    }
+
+    // teacher_id: admin ise seçilen öğretmen, teacher ise kendisi
+    const teacherId = member.role === "admin" ? teacher_member_id : member.id;
+
+    // Seçilen öğretmen bu organizasyona ait mi kontrol et
+    if (member.role === "admin") {
+      const { data: teacherMember } = await adminSupabase
+        .from("organization_members")
+        .select("id, organization_id")
+        .eq("id", teacher_member_id)
+        .single();
+
+      if (
+        !teacherMember ||
+        teacherMember.organization_id !== member.organization_id
+      ) {
+        return NextResponse.json(
+          { error: "Geçersiz öğretmen seçimi." },
+          { status: 400 },
+        );
+      }
+    }
+
     // 1. Auth'da kullanıcı oluştur
-    // Trigger handle_new_user otomatik profiles'a ekleyecek
     const { data: newUser, error: authError } =
       await adminSupabase.auth.admin.createUser({
         email,
@@ -77,7 +107,7 @@ export async function POST(req: NextRequest) {
         branch: branch || null,
         organization_id: member.organization_id,
         user_id: newUser.user.id,
-        teacher_id: member.id,
+        teacher_id: teacherId,
       });
     if (studentError) throw studentError;
 

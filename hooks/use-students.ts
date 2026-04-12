@@ -9,6 +9,7 @@ export interface Student {
   grade: string | null;
   branch: string | null;
   avatar_url: string | null;
+  is_active: boolean;
 }
 
 export function useStudents() {
@@ -52,7 +53,7 @@ export function useStudents() {
           student_number,
           grade,
           branch,
-          profiles!students_user_id_fkey1 (avatar_url)
+          profiles!students_user_id_fkey1 (avatar_url, is_active)
         `,
         )
         .order("first_name");
@@ -75,6 +76,7 @@ export function useStudents() {
         grade: s.grade,
         branch: s.branch,
         avatar_url: s.profiles?.avatar_url ?? null,
+        is_active: (s.profiles as any)?.is_active ?? true,
       }));
 
       setStudents(mapped);

@@ -17,6 +17,7 @@ import {
   CalendarIcon,
   BookOpenIcon,
   SearchIcon,
+  UsersIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -58,6 +59,14 @@ export default function StudentDetailPage() {
 
   const createdAt = student?.created_at
     ? new Date(student.created_at).toLocaleDateString("tr-TR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+
+  const lastSignInAt = student?.last_sign_in_at
+    ? new Date(student.last_sign_in_at).toLocaleDateString("tr-TR", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -156,57 +165,82 @@ export default function StudentDetailPage() {
       </div>
 
       {/* Profil Banner — tam genişlik */}
-      <div className="rounded-2xl border bg-card p-4">
-        <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-8 justify-between">
-          {/* Avatar */}
-          <div className="flex flex-row items-center gap-4">
-            <Avatar className="h-24 w-24 rounded-xl ring-1 ring-border shrink-0">
-              <AvatarImage
-                src={student?.avatar_url ?? ""}
-                alt={student?.first_name ?? ""}
-                className="rounded-xl"
-              />
-              <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl font-semibold">
-                {initials || "?"}
-              </AvatarFallback>
-            </Avatar>
-
-            {/* İsim + email */}
-            <div className="flex-1 min-w-0">
-              <h2 className="font-semibold text-lg leading-tight truncate">
+      <div className="rounded-2xl border bg-card p-5 space-y-4">
+        <div className="flex items-center gap-4">
+          <Avatar className="h-14 w-14 rounded-xl ring-1 ring-border shrink-0">
+            <AvatarImage
+              src={student?.avatar_url ?? ""}
+              alt={student?.first_name ?? ""}
+              className="rounded-xl"
+            />
+            <AvatarFallback className="rounded-xl bg-primary text-primary-foreground text-xl font-semibold">
+              {initials || "?"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-row gap-2 items-center">
+              <h2 className="font-semibold text-base leading-tight truncate">
                 {student.first_name} {student.last_name}
               </h2>
-              {student.email && (
-                <p className="text-sm text-muted-foreground mt-0.5 truncate">
-                  {student.email}
-                </p>
-              )}
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
+                  student.is_active
+                    ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                    : "bg-destructive/10 text-destructive"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full shrink-0 ${student.is_active ? "bg-green-500" : "bg-destructive"}`}
+                />
+                {student.is_active ? "Aktif Hesap" : "Pasif Hesap"}
+              </span>
+            </div>
+
+            {student.email && (
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                {student.student_number}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <UsersIcon className="h-3 w-3 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">E-posta</p>
+              <p className="text-xs font-medium">{student.email}</p>
             </div>
           </div>
-
-          {/* Sağ taraf — özet bilgiler */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-3">
-            {student.grade && (
-              <div>
-                <p className="text-[11px] text-muted-foreground">Sınıf</p>
-                <p className="text-sm font-medium">{student.grade}</p>
-              </div>
-            )}
-            {student.branch && (
-              <div>
-                <p className="text-[11px] text-muted-foreground">Alan</p>
-                <p className="text-sm font-medium">{student.branch}</p>
-              </div>
-            )}
-            {student.student_number && (
-              <div>
-                <p className="text-[11px] text-muted-foreground">Öğrenci No</p>
-                <p className="text-sm font-medium">{student.student_number}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-[11px] text-muted-foreground">Kayıt Tarihi</p>
-              <p className="text-sm font-medium">{createdAt}</p>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <UsersIcon className="h-3 w-3 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">Sınıf</p>
+              <p className="text-xs font-medium">{student.grade}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <UsersIcon className="h-3 w-3 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">Alan</p>
+              <p className="text-xs font-medium">{student.branch}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+              <CalendarIcon className="h-3 w-3 text-muted-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] text-muted-foreground">Kayıt Tarihi</p>
+              <p className="text-xs font-medium">{createdAt}</p>
             </div>
           </div>
         </div>
@@ -253,18 +287,19 @@ export default function StudentDetailPage() {
                 <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
                 <p className="text-sm font-medium">{student.last_name}</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">E-posta</p>
-                <p className="text-sm font-medium truncate">
-                  {student.email ?? "—"}
-                </p>
-              </div>
+
               <div>
                 <p className="text-xs text-muted-foreground mb-0.5">
                   Öğrenci No
                 </p>
                 <p className="text-sm font-medium">
                   {student.student_number ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">E-posta</p>
+                <p className="text-sm font-medium truncate">
+                  {student.email ?? "—"}
                 </p>
               </div>
               <div>
@@ -282,6 +317,12 @@ export default function StudentDetailPage() {
                   Kayıt Tarihi
                 </p>
                 <p className="text-sm font-medium">{createdAt}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-0.5">
+                  Son Giriş Tarihi
+                </p>
+                <p className="text-sm font-medium">{lastSignInAt}</p>
               </div>
             </div>
           </div>

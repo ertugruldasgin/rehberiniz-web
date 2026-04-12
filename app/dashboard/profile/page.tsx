@@ -265,24 +265,27 @@ export default function ProfilePage() {
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate">
-                  {fullName || "İsimsiz kullanıcı"}
-                </p>
+                <div className="flex flex-row gap-2 items-center">
+                  <p className="text-sm font-semibold truncate">
+                    {fullName || "İsimsiz kullanıcı"}
+                  </p>
+                  <span
+                    className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      userData?.is_active
+                        ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                        : "bg-destructive/10 text-destructive"
+                    }`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full shrink-0 ${userData?.is_active ? "bg-green-500" : "bg-destructive"}`}
+                    />
+                    {userData?.is_active ? "Aktif Hesap" : "Pasif Hesap"}
+                  </span>
+                </div>
+
                 <p className="text-xs text-muted-foreground mt-0.5 truncate">
                   {userData?.email}
                 </p>
-                <span
-                  className={`mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                    userData?.is_active
-                      ? "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                      : "bg-destructive/10 text-destructive"
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full shrink-0 ${userData?.is_active ? "bg-green-500" : "bg-destructive"}`}
-                  />
-                  {userData?.is_active ? "Aktif" : "Pasif"}
-                </span>
               </div>
             </div>
 
