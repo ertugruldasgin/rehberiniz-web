@@ -12,6 +12,7 @@ export interface ExamResult {
   exam_date: string;
   is_standalone: boolean;
   category: string;
+  is_official: boolean;
   subjects: SubjectResult[];
   total_correct: number;
   total_incorrect: number;

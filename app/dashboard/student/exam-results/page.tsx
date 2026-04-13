@@ -9,7 +9,7 @@ import { useMyExamResults } from "@/hooks/use-exam-results";
 import type { ExamResult } from "@/types/exam";
 import { PageHeader } from "@/components/page-header";
 
-type ViewType = "general" | "branch";
+type ViewType = "general" | "branch" | "official";
 
 function groupByCategory(results: ExamResult[]): Record<string, ExamResult[]> {
   return results.reduce(
@@ -28,9 +28,20 @@ export default function ExamResultsPage() {
   const [view, setView] = useState<ViewType>("general");
   const [addOpen, setAddOpen] = useState(false);
 
-  const generalResults = results.filter((r) => !r.is_standalone);
-  const branchResults = results.filter((r) => r.is_standalone);
-  const filtered = view === "general" ? generalResults : branchResults;
+  const generalResults = results.filter(
+    (r) => !r.is_standalone && !r.is_official,
+  );
+  const branchResults = results.filter(
+    (r) => r.is_standalone && !r.is_official,
+  );
+  const officialResults = results.filter((r) => r.is_official);
+
+  const filtered =
+    view === "general"
+      ? generalResults
+      : view === "branch"
+        ? branchResults
+        : [];
   const grouped = groupByCategory(filtered);
 
   return (
@@ -42,7 +53,7 @@ export default function ExamResultsPage() {
 
       <div className="flex flex-row items-center justify-between">
         <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
-          {(["general", "branch"] as ViewType[]).map((type) => (
+          {(["general", "branch", "official"] as ViewType[]).map((type) => (
             <button
               key={type}
               type="button"
@@ -54,7 +65,11 @@ export default function ExamResultsPage() {
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {type === "general" ? "Genel Denemeler" : "Branş Denemeleri"}
+              {type === "general"
+                ? "Genel"
+                : type === "branch"
+                  ? "Branş"
+                  : "Kurum Sınavı"}
               {!loading && (
                 <span
                   className={cn(
@@ -66,7 +81,9 @@ export default function ExamResultsPage() {
                 >
                   {type === "general"
                     ? generalResults.length
-                    : branchResults.length}
+                    : type === "branch"
+                      ? branchResults.length
+                      : officialResults.length}
                 </span>
               )}
             </button>
@@ -98,6 +115,28 @@ export default function ExamResultsPage() {
         <div className="flex items-center justify-center py-12 text-sm text-destructive">
           {error}
         </div>
+      ) : view === "official" ? (
+        officialResults.length === 0 ? (
+          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+            Henüz kurum sınavı sonucu bulunmuyor.
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {Object.entries(groupByCategory(officialResults)).map(
+              ([category, categoryResults]) => (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold">{category}</h2>
+                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted">
+                      {categoryResults.length}
+                    </span>
+                  </div>
+                  <ExamResultsTable results={categoryResults} type="general" />
+                </div>
+              ),
+            )}
+          </div>
+        )
       ) : Object.keys(grouped).length === 0 ? (
         <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
           {view === "general"

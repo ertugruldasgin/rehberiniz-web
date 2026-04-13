@@ -59,6 +59,7 @@ async function fetchResults(
       exam_name: exam?.title ?? "—",
       exam_date: exam?.date ?? "",
       is_standalone: isBranch,
+      is_official: exam?.is_official ?? false,
       category,
       total_correct: r.total_correct,
       total_incorrect: r.total_incorrect,

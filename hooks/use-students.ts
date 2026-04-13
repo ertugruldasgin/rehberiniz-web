@@ -10,6 +10,7 @@ export interface Student {
   branch: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  teacher_id: string;
 }
 
 export function useStudents(teacherMemberId?: string) {
@@ -53,6 +54,7 @@ export function useStudents(teacherMemberId?: string) {
           student_number,
           grade,
           branch,
+          teacher_id,
           profiles!students_user_id_fkey1 (avatar_url, is_active)
         `,
         )
@@ -79,6 +81,7 @@ export function useStudents(teacherMemberId?: string) {
         branch: s.branch,
         avatar_url: s.profiles?.avatar_url ?? null,
         is_active: (s.profiles as any)?.is_active ?? true,
+        teacher_id: s.teacher_id,
       }));
 
       setStudents(mapped);
