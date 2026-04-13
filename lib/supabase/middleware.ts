@@ -78,6 +78,31 @@ export async function updateSession(request: NextRequest) {
         url.pathname = "/dashboard/profile";
         return NextResponse.redirect(url);
       }
+
+      const { data: member } = await supabase
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", user.sub)
+        .single();
+
+      if (member) {
+        const { data: org } = await supabase
+          .from("organizations")
+          .select("is_active")
+          .eq("id", member.organization_id)
+          .single();
+
+        if (org && !org.is_active) {
+          const url = request.nextUrl.clone();
+          if (role == "admin") {
+            url.pathname = "/dashboard/admin/settings";
+          } else {
+            url.pathname = "/dashboard/profile";
+          }
+
+          return NextResponse.redirect(url);
+        }
+      }
     }
 
     const isDashboardRoute = Object.values(roleRoutes)

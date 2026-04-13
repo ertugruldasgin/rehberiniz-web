@@ -14,10 +14,14 @@ import {
   BuildingIcon,
   ShieldIcon,
   MailIcon,
+  GlobeIcon,
+  PhoneIcon,
+  MapPinIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { useOrganization } from "@/hooks/use-organization";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -53,6 +57,7 @@ function InfoRow({
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { userData, loading: userLoading, refresh } = useUserRole();
+  const { organization } = useOrganization();
 
   const [uploading, setUploading] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -313,6 +318,87 @@ export default function ProfilePage() {
                 label="E-posta"
                 value={userData?.email ?? "—"}
               />
+            </div>
+          </div>
+          {/* Kurum Bilgileri */}
+          <div className="rounded-2xl border bg-card p-5 space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <BuildingIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground">Kurum Adı</p>
+                  <p className="text-xs font-medium truncate">
+                    {organization?.name ?? "—"}
+                  </p>
+                </div>
+              </div>
+              {organization?.phone && (
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <PhoneIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground">Telefon</p>
+                    <p className="text-xs font-medium truncate">
+                      {organization.phone}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {organization?.email && (
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <MailIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground">E-posta</p>
+                    <p className="text-xs font-medium truncate">
+                      {organization.email}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {organization?.website && (
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <GlobeIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground">
+                      Web Sitesi
+                    </p>
+                    <p className="text-xs font-medium truncate">
+                      {organization.website}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {organization?.address && (
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                    <MapPinIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground">Adres</p>
+                    <p className="text-xs font-medium truncate">
+                      {organization.address}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <ShieldIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] text-muted-foreground">Durum</p>
+                  <p className="text-xs font-medium truncate">
+                    {organization?.is_active ? "Aktif" : "Pasif"}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

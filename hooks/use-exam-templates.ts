@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export interface ExamSection {
   key: string;
@@ -18,19 +18,39 @@ export function useExamTemplates() {
   const [templates, setTemplates] = useState<ExamTemplate[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetch() {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("exam_templates")
-        .select("id, name, category, sections")
-        .order("name");
+  const fetchTemplates = useCallback(async () => {
+    setLoading(true);
+    const supabase = createClient();
 
-      setTemplates(data ?? []);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
       setLoading(false);
+      return;
     }
-    fetch();
+
+    const { data: member } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const { data } = await supabase
+      .from("exam_templates")
+      .select("id, name, category, sections")
+      .or(
+        `organization_id.eq.${member?.organization_id},organization_id.is.null`,
+      )
+      .order("name");
+
+    setTemplates(data ?? []);
+    setLoading(false);
   }, []);
 
-  return { templates, loading };
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
+  return { templates, loading, refetch: fetchTemplates };
 }
