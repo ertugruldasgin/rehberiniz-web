@@ -145,6 +145,7 @@ export function AddExamResultDialog({
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [sections, setSections] = useState<SectionResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
@@ -154,10 +155,16 @@ export function AddExamResultDialog({
     subject: "",
   });
 
+  const categories = [...new Set(subjects.map((s) => s.category))].sort();
+  const filteredSubjects = subjects.filter(
+    (s) => s.category === selectedCategory,
+  );
+
   function handleExamTypeChange(type: ExamType) {
     setExamType(type);
     setSelectedTemplateId("");
     setSelectedSubjectId("");
+    setSelectedCategory("");
     setSections([]);
     setErrors({ title: "", date: "", template: "", subject: "" });
   }
@@ -173,6 +180,13 @@ export function AddExamResultDialog({
     setSelectedSubjectId(subjectId);
     const subject = subjects.find((s) => s.id === subjectId);
     if (subject) setSections(initBranchSection(subject));
+    setErrors((p) => ({ ...p, subject: "" }));
+  }
+
+  function handleCategoryChange(category: string) {
+    setSelectedCategory(category);
+    setSelectedSubjectId("");
+    setSections([]);
     setErrors((p) => ({ ...p, subject: "" }));
   }
 
@@ -210,7 +224,9 @@ export function AddExamResultDialog({
       valid = false;
     }
     if (examType === "branch" && !selectedSubjectId) {
-      newErrors.subject = "Ders seçiniz.";
+      newErrors.subject = !selectedCategory
+        ? "Önce alan seçiniz."
+        : "Ders seçiniz.";
       valid = false;
     }
     setErrors(newErrors);
@@ -257,6 +273,7 @@ export function AddExamResultDialog({
     setDate(new Date().toISOString().split("T")[0]);
     setSelectedTemplateId("");
     setSelectedSubjectId("");
+    setSelectedCategory("");
     setSections([]);
     setErrors({ title: "", date: "", template: "", subject: "" });
     onOpenChange(false);
@@ -304,13 +321,14 @@ export function AddExamResultDialog({
                 </div>
 
                 {/* Sınav Bilgileri */}
-                <div className="space-y-4">
+                <div className="space-y-4 w-full">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
                     <p className="text-sm font-semibold">Sınav Bilgileri</p>
                   </div>
                   <Separator />
                   <div className="grid grid-cols-2 gap-4">
+                    {/* Sınav Adı — tam genişlik */}
                     <div className="space-y-2 col-span-2">
                       <Label htmlFor="title">
                         Sınav Adı <span className="text-destructive">*</span>
@@ -336,6 +354,8 @@ export function AddExamResultDialog({
                         </p>
                       )}
                     </div>
+
+                    {/* Tarih */}
                     <div className="space-y-2">
                       <Label htmlFor="date">
                         Tarih <span className="text-destructive">*</span>
@@ -358,6 +378,7 @@ export function AddExamResultDialog({
                       )}
                     </div>
 
+                    {/* Genel — Şablon */}
                     {examType === "general" && (
                       <SelectField
                         label="Şablon"
@@ -374,20 +395,44 @@ export function AddExamResultDialog({
                       />
                     )}
 
+                    {/* Branş — Alan */}
                     {examType === "branch" && (
                       <SelectField
-                        label="Ders"
-                        placeholder="Ders seçin..."
-                        value={selectedSubjectId}
-                        onValueChange={handleSubjectChange}
+                        label="Alan"
+                        placeholder="Alan seçin..."
+                        value={selectedCategory}
+                        onValueChange={handleCategoryChange}
                         disabled={subjectsLoading || loading}
-                        error={errors.subject}
-                        items={subjects.map((s) => ({
-                          id: s.id,
-                          name: s.name,
-                          subtitle: `${s.default_questions} soru`,
+                        error={
+                          !selectedCategory && errors.subject
+                            ? errors.subject
+                            : ""
+                        }
+                        items={categories.map((cat) => ({
+                          id: cat,
+                          name: cat,
+                          subtitle: `${subjects.filter((s) => s.category === cat).length} ders`,
                         }))}
                       />
+                    )}
+
+                    {/* Branş — Ders */}
+                    {examType === "branch" && selectedCategory && (
+                      <div className="col-span-2">
+                        <SelectField
+                          label="Ders"
+                          placeholder="Ders seçin..."
+                          value={selectedSubjectId}
+                          onValueChange={handleSubjectChange}
+                          disabled={subjectsLoading || loading}
+                          error={selectedCategory ? errors.subject : ""}
+                          items={filteredSubjects.map((s) => ({
+                            id: s.id,
+                            name: s.name,
+                            subtitle: `${s.default_questions} soru`,
+                          }))}
+                        />
+                      </div>
                     )}
                   </div>
                 </div>
@@ -397,73 +442,64 @@ export function AddExamResultDialog({
             {step === "sections" && (
               <>
                 {/* Özet */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl border bg-muted/30 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">
+                <div className="grid grid-cols-3 gap-3 w-full">
+                  <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">
                       Toplam Doğru
                     </p>
-                    <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                    <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                       {totalCorrect}
                     </p>
                   </div>
-                  <div className="rounded-xl border bg-muted/30 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">
+                  <div className="rounded-xl bg-red-50 dark:bg-red-900/20 p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">
                       Toplam Yanlış
                     </p>
-                    <p className="text-lg font-bold text-red-500">
+                    <p className="text-2xl font-bold text-red-500">
                       {totalIncorrect}
                     </p>
                   </div>
-                  <div className="rounded-xl border bg-muted/30 p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Toplam Net</p>
-                    <p className="text-lg font-bold text-primary">
+                  <div className="rounded-xl bg-primary/5 border border-primary/10 p-3 text-center">
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Toplam Net
+                    </p>
+                    <p className="text-2xl font-bold text-primary">
                       {totalNet.toFixed(2)}
                     </p>
                   </div>
                 </div>
 
                 {/* Dersler */}
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <ClipboardListIcon className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <p className="text-sm font-semibold">Ders Sonuçları</p>
-                  </div>
-                  <Separator />
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-12 gap-2 px-1">
-                      <p className="col-span-4 text-xs text-muted-foreground font-medium">
-                        Ders
-                      </p>
-                      <p className="col-span-2 text-xs text-muted-foreground font-medium text-center">
-                        Soru
-                      </p>
-                      <p className="col-span-2 text-xs text-muted-foreground font-medium text-center">
-                        Doğru
-                      </p>
-                      <p className="col-span-2 text-xs text-muted-foreground font-medium text-center">
-                        Yanlış
-                      </p>
-                      <p className="col-span-2 text-xs text-muted-foreground font-medium text-center">
-                        Net
-                      </p>
-                    </div>
-                    {sections.map((s) => (
-                      <div
-                        key={s.key}
-                        className="grid grid-cols-12 gap-2 items-center"
-                      >
-                        <div className="col-span-4">
-                          <p className="text-sm font-medium leading-tight">
+                <div className="space-y-2 w-full">
+                  {sections.map((s) => (
+                    <div key={s.key} className="rounded-xl border bg-card p-3">
+                      <div className="flex items-center justify-between gap-4 mb-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">
                             {s.label}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Boş: {s.empty}
+                            {s.questions} soru · Boş: {s.empty}
                           </p>
                         </div>
-                        <p className="col-span-2 text-sm text-center text-muted-foreground tabular-nums">
-                          {s.questions}
-                        </p>
-                        <div className="col-span-2">
+                        <div
+                          className={cn(
+                            "text-lg font-bold tabular-nums shrink-0",
+                            s.net > 0
+                              ? "text-primary"
+                              : s.net < 0
+                                ? "text-destructive"
+                                : "text-muted-foreground",
+                          )}
+                        >
+                          {s.net.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-green-600 dark:text-green-400 font-medium block mb-1">
+                            Doğru
+                          </label>
                           <Input
                             type="number"
                             min={0}
@@ -480,7 +516,10 @@ export function AddExamResultDialog({
                             disabled={loading}
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div>
+                          <label className="text-xs text-red-500 font-medium block mb-1">
+                            Yanlış
+                          </label>
                           <Input
                             type="number"
                             min={0}
@@ -497,14 +536,9 @@ export function AddExamResultDialog({
                             disabled={loading}
                           />
                         </div>
-                        <p
-                          className={`col-span-2 text-sm font-semibold text-center tabular-nums ${s.net >= 0 ? "text-primary" : "text-destructive"}`}
-                        >
-                          {s.net.toFixed(2)}
-                        </p>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </>
             )}
@@ -519,7 +553,7 @@ export function AddExamResultDialog({
                 variant="outline"
                 onClick={handleClose}
                 disabled={loading}
-                className="hover:cursor-pointer"
+                className="cursor-pointer"
               >
                 İptal
               </Button>
@@ -527,7 +561,7 @@ export function AddExamResultDialog({
                 type="button"
                 onClick={handleNext}
                 disabled={loading}
-                className="hover:cursor-pointer"
+                className="cursor-pointer"
               >
                 Devam Et
               </Button>
@@ -539,10 +573,16 @@ export function AddExamResultDialog({
                 variant="outline"
                 onClick={() => setStep("info")}
                 disabled={loading}
+                className="cursor-pointer"
               >
                 Geri
               </Button>
-              <Button type="button" onClick={handleSubmit} disabled={loading}>
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={loading}
+                className="cursor-pointer"
+              >
                 {loading ? "Kaydediliyor..." : "Sonucu Kaydet"}
               </Button>
             </>
