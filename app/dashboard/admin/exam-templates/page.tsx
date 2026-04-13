@@ -45,7 +45,7 @@ export default function ExamTemplatesPage() {
       </div>
 
       {templates.length === 0 ? (
-        <div className="rounded-2xl border border-dashed bg-card/50 p-12 flex flex-col items-center gap-3 text-center">
+        <div className="rounded-2xl border border-muted bg-card/50 p-12 flex flex-col items-center gap-3 text-center">
           <ClipboardListIcon className="h-8 w-8 text-muted-foreground/30" />
           <p className="text-sm font-medium text-muted-foreground/60">
             Henüz şablon bulunmuyor

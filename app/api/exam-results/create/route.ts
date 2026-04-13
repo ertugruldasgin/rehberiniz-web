@@ -14,17 +14,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
     const body = await req.json();
-    const { title, date, template_id, subject_id, sections } = body;
+    const { title, date, template_id, subject_id, sections, exam_id } = body;
 
-    if (!title || !date || !sections?.length)
+    if (!sections?.length)
       return NextResponse.json(
         { error: "Zorunlu alanlar eksik." },
-        { status: 400 },
-      );
-
-    if (!template_id && !subject_id)
-      return NextResponse.json(
-        { error: "Şablon veya ders seçiniz." },
         { status: 400 },
       );
 
@@ -41,20 +35,41 @@ export async function POST(req: NextRequest) {
         { status: 404 },
       );
 
-    // 1. Sınav oluştur
-    const { data: exam, error: examError } = await adminSupabase
-      .from("exams")
-      .insert({
-        title,
-        date,
-        organization_id: student.organization_id,
-        exam_template_id: template_id ?? null,
-        subject_id: subject_id ?? null,
-        is_official: false,
-      })
-      .select("id")
-      .single();
-    if (examError) throw examError;
+    let finalExamId: string;
+
+    if (exam_id) {
+      // Kurum sınavı — mevcut exam'i kullan
+      finalExamId = exam_id;
+    } else {
+      // Bireysel deneme — yeni exam oluştur
+      if (!title || !date)
+        return NextResponse.json(
+          { error: "Zorunlu alanlar eksik." },
+          { status: 400 },
+        );
+
+      if (!template_id && !subject_id)
+        return NextResponse.json(
+          { error: "Şablon veya ders seçiniz." },
+          { status: 400 },
+        );
+
+      const { data: exam, error: examError } = await adminSupabase
+        .from("exams")
+        .insert({
+          title,
+          date,
+          organization_id: student.organization_id,
+          exam_template_id: template_id ?? null,
+          subject_id: subject_id ?? null,
+          is_official: false,
+        })
+        .select("id")
+        .single();
+      if (examError) throw examError;
+
+      finalExamId = exam.id;
+    }
 
     // Toplam hesapla
     const total_correct = sections.reduce(
@@ -74,12 +89,12 @@ export async function POST(req: NextRequest) {
       0,
     );
 
-    // 2. exam_results oluştur
+    // exam_results oluştur
     const { data: examResult, error: resultError } = await adminSupabase
       .from("exam_results")
       .insert({
         student_id: student.id,
-        exam_id: exam.id,
+        exam_id: finalExamId,
         total_correct,
         total_incorrect,
         total_empty,
@@ -89,7 +104,7 @@ export async function POST(req: NextRequest) {
       .single();
     if (resultError) throw resultError;
 
-    // 3. Her section için subject_results ekle
+    // subject_results ekle
     const slugs = sections.map((s: any) => s.key);
     const { data: subjects } = await adminSupabase
       .from("subjects")
@@ -104,7 +119,7 @@ export async function POST(req: NextRequest) {
       .map((s: any) => ({
         exam_result_id: examResult.id,
         subject_id: subjectMap[s.key],
-        is_standalone: !!subject_id, // branş ise true, genel ise false
+        is_standalone: !exam_id && !!subject_id,
         correct: s.correct || 0,
         incorrect: s.incorrect || 0,
         empty: s.empty || 0,

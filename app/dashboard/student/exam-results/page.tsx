@@ -5,9 +5,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ExamResultsTable } from "@/components/exam-results-table";
 import { AddExamResultDialog } from "@/components/add-exam-result-dialog";
+import { SubmitOfficialExamDialog } from "@/components/submit-official-exam-dialog";
 import { useMyExamResults } from "@/hooks/use-exam-results";
+import { usePendingExams } from "@/hooks/use-pending-exams";
 import type { ExamResult } from "@/types/exam";
 import { PageHeader } from "@/components/page-header";
+import { CheckIcon, ClipboardListIcon } from "lucide-react";
+import { PendingExamsDialog } from "@/components/pending-exams-dialog";
 
 type ViewType = "general" | "branch" | "official";
 
@@ -25,14 +29,25 @@ function groupByCategory(results: ExamResult[]): Record<string, ExamResult[]> {
 
 export default function ExamResultsPage() {
   const { results, loading, error, refetch } = useMyExamResults();
+  const {
+    exams: pendingExams,
+    loading: pendingLoading,
+    refetch: refetchPending,
+  } = usePendingExams();
   const [view, setView] = useState<ViewType>("general");
   const [addOpen, setAddOpen] = useState(false);
+  const [pendingOpen, setPendingOpen] = useState(false);
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [selectedPendingExam, setSelectedPendingExam] = useState<
+    (typeof pendingExams)[0] | null
+  >(null);
+  const [showOfficial, setShowOfficial] = useState(true);
 
   const generalResults = results.filter(
-    (r) => !r.is_standalone && !r.is_official,
+    (r) => !r.is_standalone && (showOfficial || !r.is_official),
   );
   const branchResults = results.filter(
-    (r) => r.is_standalone && !r.is_official,
+    (r) => r.is_standalone && (showOfficial || !r.is_official),
   );
   const officialResults = results.filter((r) => r.is_official);
 
@@ -44,6 +59,12 @@ export default function ExamResultsPage() {
         : [];
   const grouped = groupByCategory(filtered);
 
+  function handlePendingExamSelect(exam: (typeof pendingExams)[0]) {
+    setSelectedPendingExam(exam);
+    setPendingOpen(false);
+    setSubmitOpen(true);
+  }
+
   return (
     <div className="flex flex-col px-4 md:px-6 space-y-6">
       <PageHeader
@@ -51,47 +72,91 @@ export default function ExamResultsPage() {
         description="Girdiğiniz denemelerin detaylı sonuçlarını görüntüleyin."
       />
 
-      <div className="flex flex-row items-center justify-between">
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
-          {(["general", "branch", "official"] as ViewType[]).map((type) => (
+      <div className="flex flex-row flex-wrap-reverse gap-4 items-center justify-between">
+        <div className="flex flex-row flex-wrap-reverse gap-4">
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
+            {(["general", "branch", "official"] as ViewType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setView(type)}
+                className={cn(
+                  "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
+                  view === type
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {type === "general"
+                  ? "Genel"
+                  : type === "branch"
+                    ? "Branş"
+                    : "Kurum"}
+                {!loading && (
+                  <span
+                    className={cn(
+                      "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
+                      view === type
+                        ? "bg-muted text-muted-foreground"
+                        : "bg-muted/50 text-muted-foreground/70",
+                    )}
+                  >
+                    {type === "general"
+                      ? generalResults.length
+                      : type === "branch"
+                        ? branchResults.length
+                        : officialResults.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
             <button
-              key={type}
               type="button"
-              onClick={() => setView(type)}
+              onClick={() => setShowOfficial((p) => !p)}
               className={cn(
-                "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                view === type
+                "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-2",
+                showOfficial
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              {type === "general"
-                ? "Genel"
-                : type === "branch"
-                  ? "Branş"
-                  : "Kurum Sınavı"}
-              {!loading && (
-                <span
-                  className={cn(
-                    "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
-                    view === type
-                      ? "bg-muted text-muted-foreground"
-                      : "bg-muted/50 text-muted-foreground/70",
-                  )}
-                >
-                  {type === "general"
-                    ? generalResults.length
-                    : type === "branch"
-                      ? branchResults.length
-                      : officialResults.length}
-                </span>
-              )}
+              <div
+                className={cn(
+                  "h-3.5 w-3.5 rounded-sm border-2 flex items-center justify-center shrink-0 transition-all",
+                  showOfficial
+                    ? "bg-primary border-primary"
+                    : "border-current opacity-50",
+                )}
+              >
+                {showOfficial && (
+                  <CheckIcon className="h-2.5 w-2.5 text-primary-foreground" />
+                )}
+              </div>
+              Kurum Sınavları
             </button>
-          ))}
+          </div>
         </div>
-        <Button onClick={() => setAddOpen(true)} className="cursor-pointer">
-          Sonuç Ekle
-        </Button>
+
+        <div className="flex items-center gap-2">
+          {/* Bekleyen sınav bildirimi */}
+          {!pendingLoading && pendingExams.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setPendingOpen(true)}
+              className="relative flex items-center px-1.5 py-1.5 rounded-lg border border-destructive bg-destructive/5 hover:bg-destructive/10 transition-colors cursor-pointer"
+            >
+              <ClipboardListIcon className="h-4 w-4 text-destructive" />
+              <span className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-bold text-white flex items-center justify-center">
+                {pendingExams.length}
+              </span>
+            </button>
+          )}
+          <Button onClick={() => setAddOpen(true)} className="cursor-pointer">
+            Sonuç Ekle
+          </Button>
+        </div>
       </div>
 
       {/* İçerik */}
@@ -164,6 +229,25 @@ export default function ExamResultsPage() {
         onOpenChange={setAddOpen}
         onSuccess={refetch}
       />
+
+      <PendingExamsDialog
+        open={pendingOpen}
+        onOpenChange={setPendingOpen}
+        exams={pendingExams}
+        onSelect={handlePendingExamSelect}
+      />
+
+      {selectedPendingExam && (
+        <SubmitOfficialExamDialog
+          open={submitOpen}
+          onOpenChange={setSubmitOpen}
+          exam={selectedPendingExam}
+          onSuccess={() => {
+            refetch();
+            refetchPending();
+          }}
+        />
+      )}
     </div>
   );
 }
