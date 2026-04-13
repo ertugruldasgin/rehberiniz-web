@@ -8,6 +8,7 @@ import {
   ChevronRightIcon,
   UsersIcon,
   AlertCircleIcon,
+  PlusIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -98,7 +99,9 @@ export default function TeachersPage() {
             className="cursor-pointer shrink-0"
           >
             <span className="hidden sm:inline">Öğretmen Ekle</span>
-            <span className="sm:hidden">+</span>
+            <span className="sm:hidden">
+              <PlusIcon className="h-4 w-4" />
+            </span>
           </Button>
         </div>
         <AddTeacherDialog

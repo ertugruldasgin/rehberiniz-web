@@ -3,7 +3,12 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SearchIcon, ChevronRightIcon, UsersIcon } from "lucide-react";
+import {
+  SearchIcon,
+  ChevronRightIcon,
+  UsersIcon,
+  PlusIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useMemo } from "react";
 import { useUserRole } from "@/hooks/use-user-role";
@@ -66,7 +71,9 @@ export function StudentsTable({
             className="hover:bg-primary/90 cursor-pointer shrink-0"
           >
             <span className="hidden sm:inline">Öğrenci Ekle</span>
-            <span className="sm:hidden">+</span>
+            <span className="sm:hidden">
+              <PlusIcon className="h-4 w-4" />
+            </span>
           </Button>
         )}
       </div>
@@ -161,7 +168,7 @@ export function StudentsTable({
                         </p>
                         {student.student_number && (
                           <p className="text-xs text-muted-foreground sm:hidden">
-                            #{student.student_number}
+                            {student.student_number}
                           </p>
                         )}
                       </div>

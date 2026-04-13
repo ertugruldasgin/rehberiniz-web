@@ -203,11 +203,11 @@ export function AddExamTemplateDialog({
                     disabled={loading}
                   >
                     <SelectTrigger
-                      className={`h-10! ${errors.category ? "border-destructive" : ""}`}
+                      className={`h-10! w-full ${errors.category ? "border-destructive" : ""}`}
                     >
                       <SelectValue placeholder="Kategori seçin..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="p-1">
                       {CATEGORIES.map((c) => (
                         <SelectItem
                           key={c}
@@ -267,9 +267,9 @@ export function AddExamTemplateDialog({
                     Bölüm Adı
                   </p>
                   <p className="text-xs text-muted-foreground font-medium">
-                    Anahtar (otomatik)
+                    Anahtar
                   </p>
-                  <p className="text-xs text-muted-foreground font-medium text-center">
+                  <p className="text-xs text-muted-foreground font-medium">
                     Soru
                   </p>
                   <div />

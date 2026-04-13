@@ -45,6 +45,9 @@ export default function ExamsPage() {
           className="cursor-pointer shrink-0"
         >
           <span className="hidden sm:inline">Sınav Oluştur</span>
+          <span className="sm:hidden">
+            <PlusIcon className="h-4 w-4" />
+          </span>
         </Button>
       </div>
 

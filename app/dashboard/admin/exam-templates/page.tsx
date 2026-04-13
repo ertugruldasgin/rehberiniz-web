@@ -37,9 +37,9 @@ export default function ExamTemplatesPage() {
         />
         <Button
           onClick={() => setAddOpen(true)}
-          className="gap-1.5 cursor-pointer shrink-0"
+          className="cursor-pointer shrink-0"
         >
-          <PlusIcon className="h-4 w-4" />
+          <PlusIcon className="h-4 w-4 sm:hidden" />
           <span className="hidden sm:inline">Şablon Oluştur</span>
         </Button>
       </div>
