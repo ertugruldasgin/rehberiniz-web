@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ExamResultsTable } from "@/components/exam-results-table";
 import { AddExamResultDialog } from "@/components/add-exam-result-dialog";
 import { SubmitOfficialExamDialog } from "@/components/submit-official-exam-dialog";
@@ -10,7 +11,7 @@ import { useMyExamResults } from "@/hooks/use-exam-results";
 import { usePendingExams } from "@/hooks/use-pending-exams";
 import type { ExamResult } from "@/types/exam";
 import { PageHeader } from "@/components/page-header";
-import { CheckIcon, ClipboardListIcon } from "lucide-react";
+import { CheckIcon, ClipboardListIcon, SearchIcon } from "lucide-react";
 import { PendingExamsDialog } from "@/components/pending-exams-dialog";
 
 type ViewType = "general" | "branch" | "official";
@@ -35,6 +36,7 @@ export default function ExamResultsPage() {
     refetch: refetchPending,
   } = usePendingExams();
   const [view, setView] = useState<ViewType>("general");
+  const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [pendingOpen, setPendingOpen] = useState(false);
   const [submitOpen, setSubmitOpen] = useState(false);
@@ -51,13 +53,17 @@ export default function ExamResultsPage() {
   );
   const officialResults = results.filter((r) => r.is_official);
 
-  const filtered =
+  const currentResults =
     view === "general"
       ? generalResults
       : view === "branch"
         ? branchResults
-        : [];
-  const grouped = groupByCategory(filtered);
+        : officialResults;
+
+  const filteredResults = currentResults.filter((r) =>
+    r.category.toLowerCase().includes(search.toLowerCase()),
+  );
+  const grouped = groupByCategory(filteredResults);
 
   function handlePendingExamSelect(exam: (typeof pendingExams)[0]) {
     setSelectedPendingExam(exam);
@@ -73,13 +79,16 @@ export default function ExamResultsPage() {
       />
 
       <div className="flex flex-row flex-wrap-reverse gap-4 items-center justify-between">
-        <div className="flex flex-row flex-wrap-reverse gap-4">
+        <div className="flex flex-row flex-wrap gap-3">
           <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
             {(["general", "branch", "official"] as ViewType[]).map((type) => (
               <button
                 key={type}
                 type="button"
-                onClick={() => setView(type)}
+                onClick={() => {
+                  setView(type);
+                  setSearch("");
+                }}
                 className={cn(
                   "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
                   view === type
@@ -111,6 +120,7 @@ export default function ExamResultsPage() {
               </button>
             ))}
           </div>
+
           <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
             <button
               type="button"
@@ -137,10 +147,19 @@ export default function ExamResultsPage() {
               Kurum Sınavları
             </button>
           </div>
+
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Kategori ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 w-48 bg-card"
+            />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Bekleyen sınav bildirimi */}
           {!pendingLoading && pendingExams.length > 0 && (
             <button
               type="button"
@@ -180,33 +199,15 @@ export default function ExamResultsPage() {
         <div className="flex items-center justify-center py-12 text-sm text-destructive">
           {error}
         </div>
-      ) : view === "official" ? (
-        officialResults.length === 0 ? (
-          <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-            Henüz kurum sınavı sonucu bulunmuyor.
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {Object.entries(groupByCategory(officialResults)).map(
-              ([category, categoryResults]) => (
-                <div key={category} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-semibold">{category}</h2>
-                    <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted">
-                      {categoryResults.length}
-                    </span>
-                  </div>
-                  <ExamResultsTable results={categoryResults} type="general" />
-                </div>
-              ),
-            )}
-          </div>
-        )
       ) : Object.keys(grouped).length === 0 ? (
         <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-          {view === "general"
-            ? "Henüz genel deneme sonucu bulunmuyor."
-            : "Henüz branş denemesi sonucu bulunmuyor."}
+          {search
+            ? "Arama sonucu bulunamadı."
+            : view === "general"
+              ? "Henüz genel deneme sonucu bulunmuyor."
+              : view === "branch"
+                ? "Henüz branş denemesi sonucu bulunmuyor."
+                : "Henüz kurum sınavı sonucu bulunmuyor."}
         </div>
       ) : (
         <div className="space-y-8">
@@ -218,7 +219,10 @@ export default function ExamResultsPage() {
                   {categoryResults.length}
                 </span>
               </div>
-              <ExamResultsTable results={categoryResults} type={view} />
+              <ExamResultsTable
+                results={categoryResults}
+                type={view === "official" ? "general" : view}
+              />
             </div>
           ))}
         </div>

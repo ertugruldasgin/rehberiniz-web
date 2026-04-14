@@ -20,6 +20,7 @@ import {
   UsersIcon,
   UserXIcon,
   UserCheckIcon,
+  CheckIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,7 +33,7 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 type Tab = "general" | "exams" | "notes";
-type ExamView = "general" | "branch";
+type ExamView = "general" | "branch" | "official";
 
 function groupByCategory<T extends { category: string }>(
   items: T[],
@@ -57,6 +58,7 @@ export default function StudentDetailPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [examView, setExamView] = useState<ExamView>("general");
+  const [showOfficial, setShowOfficial] = useState(false);
   const [examSearch, setExamSearch] = useState("");
   const [togglingActive, setTogglingActive] = useState(false);
 
@@ -101,10 +103,21 @@ export default function StudentDetailPage() {
       })
     : "";
 
-  const generalResults = examResults.filter((r) => !r.is_standalone);
-  const branchResults = examResults.filter((r) => r.is_standalone);
+  const generalResults = examResults.filter(
+    (r) => !r.is_standalone && (showOfficial || !r.is_official),
+  );
+  const branchResults = examResults.filter(
+    (r) => r.is_standalone && (showOfficial || !r.is_official),
+  );
+  const officialResults = examResults.filter((r) => r.is_official);
+
   const currentResults =
-    examView === "general" ? generalResults : branchResults;
+    examView === "general"
+      ? generalResults
+      : examView === "branch"
+        ? branchResults
+        : officialResults;
+
   const filteredResults = currentResults.filter((r) =>
     r.category.toLowerCase().includes(examSearch.toLowerCase()),
   );
@@ -398,37 +411,73 @@ export default function StudentDetailPage() {
               {/* Pill + Search */}
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted shrink-0">
-                  {(["general", "branch"] as ExamView[]).map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => {
-                        setExamView(type);
-                        setExamSearch("");
-                      }}
-                      className={cn(
-                        "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                        examView === type
-                          ? "bg-card text-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {type === "general" ? "Genel" : "Branş"}
-                      <span
+                  {(["general", "branch", "official"] as ExamView[]).map(
+                    (type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setExamView(type);
+                          setExamSearch("");
+                        }}
                         className={cn(
-                          "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
+                          "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
                           examView === type
-                            ? "bg-muted text-muted-foreground"
-                            : "bg-muted/50 text-muted-foreground/70",
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
                         )}
                       >
                         {type === "general"
-                          ? generalResults.length
-                          : branchResults.length}
-                      </span>
-                    </button>
-                  ))}
+                          ? "Genel"
+                          : type === "branch"
+                            ? "Branş"
+                            : "Kurum"}
+                        <span
+                          className={cn(
+                            "ml-1.5 text-xs px-1.5 py-0.5 rounded-full",
+                            examView === type
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-muted/50 text-muted-foreground/70",
+                          )}
+                        >
+                          {type === "general"
+                            ? generalResults.length
+                            : type === "branch"
+                              ? branchResults.length
+                              : officialResults.length}
+                        </span>
+                      </button>
+                    ),
+                  )}
                 </div>
+
+                <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setShowOfficial((p) => !p)}
+                    className={cn(
+                      "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-2",
+                      showOfficial
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "h-3.5 w-3.5 rounded-sm border-2 flex items-center justify-center shrink-0 transition-all",
+                        showOfficial
+                          ? "bg-primary border-primary"
+                          : "border-current opacity-50",
+                      )}
+                    >
+                      {showOfficial && (
+                        <CheckIcon className="h-2.5 w-2.5 text-primary-foreground" />
+                      )}
+                    </div>
+                    Kurum Sınavları
+                  </button>
+                </div>
+
                 <div className="relative flex-1 min-w-[160px] max-w-[360px]">
                   <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -441,7 +490,24 @@ export default function StudentDetailPage() {
               </div>
 
               {/* İçerik */}
-              {Object.keys(grouped).length === 0 ? (
+              {examView === "official" ? (
+                Object.keys(grouped).length === 0 ? (
+                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+                    {examSearch
+                      ? "Arama sonucu bulunamadı."
+                      : "Henüz kurum sınavı sonucu bulunmuyor."}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {Object.entries(grouped).map(([category, results]) => (
+                      <div key={category} className="space-y-2">
+                        <p className="text-sm font-semibold">{category}</p>
+                        <ExamResultsTable results={results} type="general" />
+                      </div>
+                    ))}
+                  </div>
+                )
+              ) : Object.keys(grouped).length === 0 ? (
                 <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
                   {examSearch
                     ? "Arama sonucu bulunamadı."

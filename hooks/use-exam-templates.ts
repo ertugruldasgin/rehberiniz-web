@@ -12,6 +12,7 @@ export interface ExamTemplate {
   name: string;
   category: string;
   sections: ExamSection[];
+  organization_id: string | null;
 }
 
 export function useExamTemplates() {
@@ -38,7 +39,7 @@ export function useExamTemplates() {
 
     const { data } = await supabase
       .from("exam_templates")
-      .select("id, name, category, sections")
+      .select("id, name, category, sections, organization_id")
       .or(
         `organization_id.eq.${member?.organization_id},organization_id.is.null`,
       )

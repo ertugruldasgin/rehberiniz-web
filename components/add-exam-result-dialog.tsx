@@ -27,7 +27,7 @@ import { useExamTemplates, ExamSection } from "@/hooks/use-exam-templates";
 import { cn } from "@/lib/utils";
 import { useSubjects } from "@/hooks/use-subjects";
 
-type ExamType = "general" | "branch";
+type ExamType = "general" | "branch" | "custom";
 
 interface SectionResult {
   key: string;
@@ -137,8 +137,10 @@ export function AddExamResultDialog({
   onSuccess,
 }: AddExamResultDialogProps) {
   const { templates, loading: templatesLoading } = useExamTemplates();
-  const { subjects, loading: subjectsLoading } = useSubjects();
+  const generalTemplates = templates.filter((t) => !t.organization_id);
+  const customTemplates = templates.filter((t) => !!t.organization_id);
 
+  const { subjects, loading: subjectsLoading } = useSubjects();
   const [examType, setExamType] = useState<ExamType>("general");
   const [step, setStep] = useState<"info" | "sections">("info");
   const [title, setTitle] = useState("");
@@ -219,7 +221,10 @@ export function AddExamResultDialog({
       newErrors.date = "Tarih zorunludur.";
       valid = false;
     }
-    if (examType === "general" && !selectedTemplateId) {
+    if (
+      (examType === "general" || examType === "custom") &&
+      !selectedTemplateId
+    ) {
       newErrors.template = "Şablon seçiniz.";
       valid = false;
     }
@@ -303,19 +308,25 @@ export function AddExamResultDialog({
               <>
                 {/* Deneme Türü Seçici */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
-                  {(["general", "branch"] as ExamType[]).map((type) => (
+                  {(
+                    [
+                      { key: "general", label: "Genel Deneme" },
+                      { key: "custom", label: "Kurum Denemesi" },
+                      { key: "branch", label: "Branş Denemesi" },
+                    ] as { key: ExamType; label: string }[]
+                  ).map((type) => (
                     <button
-                      key={type}
+                      key={type.key}
                       type="button"
-                      onClick={() => handleExamTypeChange(type)}
+                      onClick={() => handleExamTypeChange(type.key)}
                       className={cn(
                         "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                        examType === type
+                        examType === type.key
                           ? "bg-card text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {type === "general" ? "Genel Deneme" : "Branş Denemesi"}
+                      {type.label}
                     </button>
                   ))}
                 </div>
@@ -387,7 +398,23 @@ export function AddExamResultDialog({
                         onValueChange={handleTemplateChange}
                         disabled={templatesLoading || loading}
                         error={errors.template}
-                        items={templates.map((t) => ({
+                        items={generalTemplates.map((t) => ({
+                          id: t.id,
+                          name: t.name,
+                          subtitle: t.category,
+                        }))}
+                      />
+                    )}
+
+                    {examType === "custom" && (
+                      <SelectField
+                        label="Kurum Şablonu"
+                        placeholder="Şablon seçin..."
+                        value={selectedTemplateId}
+                        onValueChange={handleTemplateChange}
+                        disabled={templatesLoading || loading}
+                        error={errors.template}
+                        items={customTemplates.map((t) => ({
                           id: t.id,
                           name: t.name,
                           subtitle: t.category,

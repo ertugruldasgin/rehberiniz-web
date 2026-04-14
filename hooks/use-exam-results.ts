@@ -22,9 +22,11 @@ async function fetchResults(
       exam_template_id,
       subject_id,
       exam_templates (
+        name,
         category
       ),
       subjects (
+        name,
         category
       )
     ),
@@ -49,10 +51,11 @@ async function fetchResults(
     const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
     const isBranch = !exam?.exam_template_id && !!exam?.subject_id;
 
-    const firstSubject = r.subject_results?.[0];
+    const firstSubjectResult = r.subject_results?.[0];
+
     const category = isBranch
-      ? (firstSubject?.subjects?.name ?? "Diğer")
-      : (exam?.exam_templates?.category ?? "Diğer");
+      ? (firstSubjectResult?.subjects?.name ?? "Diğer")
+      : (exam?.exam_templates?.name ?? exam?.title ?? "Diğer");
 
     return {
       id: r.id,

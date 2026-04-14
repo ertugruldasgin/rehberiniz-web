@@ -30,7 +30,7 @@ import { useStudents } from "@/hooks/use-students";
 import { useTeachers } from "@/hooks/use-teachers";
 import { cn } from "@/lib/utils";
 
-type ExamType = "general" | "branch";
+type ExamType = "general" | "custom" | "branch";
 type TargetType = "all" | "teacher" | "individual";
 type Step = "info" | "target";
 
@@ -154,6 +154,9 @@ export function AddExamDialog({
   const { students } = useStudents();
   const { teachers } = useTeachers();
 
+  const generalTemplates = templates.filter((t) => !t.organization_id);
+  const customTemplates = templates.filter((t) => !!t.organization_id);
+
   const [step, setStep] = useState<Step>("info");
   const [examType, setExamType] = useState<ExamType>("general");
   const [title, setTitle] = useState("");
@@ -197,7 +200,10 @@ export function AddExamDialog({
       newErrors.date = "Tarih zorunludur.";
       valid = false;
     }
-    if (examType === "general" && !selectedTemplateId) {
+    if (
+      (examType === "general" || examType === "custom") &&
+      !selectedTemplateId
+    ) {
       newErrors.template = "Şablon seçiniz.";
       valid = false;
     }
@@ -257,7 +263,7 @@ export function AddExamDialog({
         body: JSON.stringify({
           title,
           date,
-          template_id: examType === "general" ? selectedTemplateId : null,
+          template_id: examType !== "branch" ? selectedTemplateId : null,
           subject_id: examType === "branch" ? selectedSubjectId : null,
           student_ids: finalStudentIds,
         }),
@@ -309,19 +315,25 @@ export function AddExamDialog({
               <>
                 {/* Tür seçici */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
-                  {(["general", "branch"] as ExamType[]).map((type) => (
+                  {(
+                    [
+                      { key: "general", label: "Genel" },
+                      { key: "branch", label: "Branş" },
+                      { key: "custom", label: "Kurum" },
+                    ] as { key: ExamType; label: string }[]
+                  ).map((type) => (
                     <button
-                      key={type}
+                      key={type.key}
                       type="button"
-                      onClick={() => handleExamTypeChange(type)}
+                      onClick={() => handleExamTypeChange(type.key)}
                       className={cn(
                         "px-4 py-1.5 rounded-lg text-sm font-medium transition-all cursor-pointer",
-                        examType === type
+                        examType === type.key
                           ? "bg-card text-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {type === "general" ? "Genel Deneme" : "Branş Denemesi"}
+                      {type.label}
                     </button>
                   ))}
                 </div>
@@ -344,7 +356,7 @@ export function AddExamDialog({
                           setTitle(e.target.value);
                           setErrors((p) => ({ ...p, title: "" }));
                         }}
-                        placeholder={"Sınav Adı"}
+                        placeholder="Sınav Adı"
                         className={`h-10 ${errors.title ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
                         disabled={loading}
                       />
@@ -388,7 +400,26 @@ export function AddExamDialog({
                         }}
                         disabled={templatesLoading || loading}
                         error={errors.template}
-                        items={templates.map((t) => ({
+                        items={generalTemplates.map((t) => ({
+                          id: t.id,
+                          name: t.name,
+                          subtitle: t.category,
+                        }))}
+                      />
+                    )}
+
+                    {examType === "custom" && (
+                      <SelectField
+                        label="Kurum Şablonu"
+                        placeholder="Şablon seçin..."
+                        value={selectedTemplateId}
+                        onValueChange={(v) => {
+                          setSelectedTemplateId(v);
+                          setErrors((p) => ({ ...p, template: "" }));
+                        }}
+                        disabled={templatesLoading || loading}
+                        error={errors.template}
+                        items={customTemplates.map((t) => ({
                           id: t.id,
                           name: t.name,
                           subtitle: t.category,
@@ -443,7 +474,6 @@ export function AddExamDialog({
 
             {step === "target" && (
               <>
-                {/* Hedef tipi — kart grid */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
                   {(
                     [
@@ -471,16 +501,15 @@ export function AddExamDialog({
                   ))}
                 </div>
 
-                {/* Tüm kurum */}
                 {targetType === "all" && (
-                  <div className="w-full rounded-xl border bg-card flex items-center gap-3">
+                  <div className="w-full rounded-xl border bg-card p-4 flex items-center gap-3">
                     <div>
                       <p className="text-sm font-medium">
                         Tüm öğrencilere atanacak
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Kurumunuzdaki{" "}
-                        <span className="text-card-foreground font-bold">
+                        <span className="text-foreground font-bold">
                           {students.length}
                         </span>{" "}
                         öğrenciye bu sınav atanacak.
@@ -489,7 +518,6 @@ export function AddExamDialog({
                   </div>
                 )}
 
-                {/* Öğretmen seçimi */}
                 {targetType === "teacher" && (
                   <div className="space-y-4 w-full">
                     <Separator />
@@ -540,16 +568,15 @@ export function AddExamDialog({
                         </p>
                       )}
                     </div>
-
                     {selectedTeacherId &&
                       (() => {
                         const count = students.filter(
                           (s) => s.teacher_id === selectedTeacherId,
                         ).length;
                         return (
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-muted-foreground">
                             Bu öğretmene bağlı{" "}
-                            <span className="text-card-foreground font-bold">
+                            <span className="text-foreground font-bold">
                               {count}
                             </span>{" "}
                             öğrenciye bu sınav atanacak.
@@ -559,7 +586,6 @@ export function AddExamDialog({
                   </div>
                 )}
 
-                {/* Bireysel seçim */}
                 {targetType === "individual" && (
                   <div className="space-y-3 w-full">
                     <Separator />
@@ -604,7 +630,6 @@ export function AddExamDialog({
                               <CheckIcon className="h-2.5 w-2.5 text-primary-foreground" />
                             )}
                           </div>
-
                           {s.avatar_url ? (
                             <img
                               src={s.avatar_url}
@@ -617,7 +642,6 @@ export function AddExamDialog({
                               {s.last_name[0]}
                             </div>
                           )}
-
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium truncate">
                               {s.first_name} {s.last_name}
