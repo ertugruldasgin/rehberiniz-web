@@ -1,15 +1,16 @@
-import { PageHeader } from "@/components/page-header";
-import React from "react";
+"use client";
 
-const ExamHistory = () => {
+import { PageHeader } from "@/components/page-header";
+import { ExamsList } from "@/components/exams-list";
+
+export default function ExamHistoryPage() {
   return (
-    <div className="flex flex-col px-4 md:px-6 space-y-6">
+    <div className="w-full px-4 md:px-6 space-y-6">
       <PageHeader
         title="Sınav Geçmişi"
-        description="Öğrencilerinizin sınav geçmişini görüntüleyin."
+        description="Öğrencilerinize atanan kurumsal sınavları görüntüleyin."
       />
+      <ExamsList canDelete={false} />
     </div>
   );
-};
-
-export default ExamHistory;
+}
