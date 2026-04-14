@@ -5,12 +5,47 @@ import { Button } from "@/components/ui/button";
 import { AddExamTemplateDialog } from "@/components/add-exam-template-dialog";
 import { useExamTemplates } from "@/hooks/use-exam-templates";
 import { useState } from "react";
-import { ClipboardListIcon, PlusIcon } from "lucide-react";
+import { ClipboardListIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ExamTemplatesPage() {
   const { templates, loading, refetch } = useExamTemplates();
   const [addOpen, setAddOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/exam-templates/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ template_id: deleteId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Bir hata oluştu.");
+      toast.success("Şablon silindi.");
+      refetch();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
+    }
+  }
 
   if (loading) {
     return (
@@ -27,6 +62,10 @@ export default function ExamTemplatesPage() {
       </div>
     );
   }
+
+  // Genel (organization_id null) ve kurum şablonlarını ayır
+  const generalTemplates = templates.filter((t) => !t.organization_id);
+  const customTemplates = templates.filter((t) => !!t.organization_id);
 
   return (
     <div className="w-full px-4 md:px-6 space-y-6">
@@ -63,51 +102,47 @@ export default function ExamTemplatesPage() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {templates.map((t) => (
-            <div
-              key={t.id}
-              className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 space-y-3 transition-colors"
-            >
-              <div className="flex flex-col">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-sm truncate">{t.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t.sections.length} bölüm
-                    </p>
-                  </div>
-                  <Badge variant="secondary" className="shrink-0">
-                    {t.category}
-                  </Badge>
-                </div>
-                <div className="space-y-1.5">
-                  {t.sections.map((s) => (
-                    <div
-                      key={s.key}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <span className="text-muted-foreground truncate">
-                        {s.label}
-                      </span>
-                      <span className="text-card-foreground font-medium tabular-nums shrink-0 ml-2">
-                        {s.questions} soru
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-end pt-1 border-t border-card-foreground">
-                <p className="text-xs text-muted-foreground">
-                  Toplam:{" "}
-                  <span className="font-semibold text-foreground">
-                    {t.sections.reduce((a, s) => a + s.questions, 0)}
-                  </span>{" "}
-                  soru
-                </p>
+        <div className="space-y-8">
+          {/* Genel Şablonlar */}
+          {generalTemplates.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Genel Şablonlar
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {generalTemplates.map((t) => (
+                  <TemplateCard
+                    key={t.id}
+                    template={t}
+                    canDelete={false}
+                    onDelete={() => {}}
+                  />
+                ))}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Kurum Şablonları */}
+          {customTemplates.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Kurum Şablonları
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {customTemplates.map((t) => (
+                  <TemplateCard
+                    key={t.id}
+                    template={t}
+                    canDelete={true}
+                    onDelete={() => {
+                      setDeleteId(t.id);
+                      setDeleteName(t.name);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -116,6 +151,96 @@ export default function ExamTemplatesPage() {
         onOpenChange={setAddOpen}
         onSuccess={refetch}
       />
+
+      <AlertDialog
+        open={!!deleteId}
+        onOpenChange={(o) => !o && setDeleteId(null)}
+      >
+        <AlertDialogContent className="bg-popover ring-border">
+          <AlertDialogHeader className="bg-popover">
+            <AlertDialogTitle className="text-lg font-semibold">
+              Şablonu sil
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              <span className="font-medium text-foreground">{deleteName}</span>{" "}
+              şablonunu silmek istediğinize emin misiniz? Mevcut sınav sonuçları
+              etkilenmez.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="bg-popover">
+            <AlertDialogCancel disabled={deleting} className="cursor-pointer">
+              Vazgeç
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive/90! text-destructive-foreground hover:bg-destructive! cursor-pointer"
+            >
+              {deleting ? "Siliniyor..." : "Evet, Sil"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function TemplateCard({
+  template: t,
+  canDelete,
+  onDelete,
+}: {
+  template: ReturnType<typeof useExamTemplates>["templates"][0];
+  canDelete: boolean;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 space-y-3 transition-colors">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="font-semibold text-sm truncate">{t.name}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {t.sections.length} bölüm
+            </p>
+          </div>
+          <Badge variant="secondary" className="shrink-0">
+            {t.category}
+          </Badge>
+        </div>
+        <div className="space-y-1.5">
+          {t.sections.map((s) => (
+            <div
+              key={s.key}
+              className="flex items-center justify-between text-xs"
+            >
+              <span className="text-muted-foreground truncate">{s.label}</span>
+              <span className="text-foreground font-medium tabular-nums shrink-0 ml-2">
+                {s.questions} soru
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between pt-1 border-t">
+        <p className="text-xs text-muted-foreground">
+          Toplam:{" "}
+          <span className="font-semibold text-foreground">
+            {t.sections.reduce((a, s) => a + s.questions, 0)}
+          </span>{" "}
+          soru
+        </p>
+        {canDelete && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onDelete}
+            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+          >
+            <Trash2Icon className="h-3.5 w-3.5" />
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
