@@ -46,7 +46,7 @@ export default function StudentsPage() {
   return (
     <div className="w-full px-4 md:px-6 space-y-6">
       <PageHeader
-        title="Öğrenciler"
+        title="Öğrencilerim"
         description={`Toplam ${students.length} öğrenci listeleniyor.`}
       />
       <StudentsTable

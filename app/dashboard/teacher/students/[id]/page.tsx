@@ -12,8 +12,6 @@ import {
   PencilIcon,
   Trash2Icon,
   UserIcon,
-  MailIcon,
-  HashIcon,
   CalendarIcon,
   BookOpenIcon,
   SearchIcon,
@@ -21,16 +19,33 @@ import {
   UserXIcon,
   UserCheckIcon,
   CheckIcon,
+  PlusIcon,
+  LockIcon,
+  LockOpenIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useExamResults } from "@/hooks/use-exam-results";
+import { useGuidanceNotes } from "@/hooks/use-guidance-notes";
 import { EditStudentDialog } from "@/components/edit-student-dialog";
 import { DeleteStudentDialog } from "@/components/delete-student-dialog";
+import { AddGuidanceNoteDialog } from "@/components/add-guidance-note-dialog";
+import { EditGuidanceNoteDialog } from "@/components/edit-guidance-note-dialog";
 import { useUserRole } from "@/hooks/use-user-role";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import type { GuidanceNote } from "@/hooks/use-guidance-notes";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Tab = "general" | "exams" | "notes";
 type ExamView = "general" | "branch" | "official";
@@ -52,8 +67,14 @@ export default function StudentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { results: examResults, loading: examLoading } = useExamResults(id);
+  const {
+    notes,
+    loading: notesLoading,
+    refetch: refetchNotes,
+  } = useGuidanceNotes(id);
   const { userData } = useUserRole();
   const { student, loading, error, refetch } = useStudent(id);
+
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("general");
@@ -61,6 +82,11 @@ export default function StudentDetailPage() {
   const [showOfficial, setShowOfficial] = useState(false);
   const [examSearch, setExamSearch] = useState("");
   const [togglingActive, setTogglingActive] = useState(false);
+
+  const [addNoteOpen, setAddNoteOpen] = useState(false);
+  const [editNote, setEditNote] = useState<GuidanceNote | null>(null);
+  const [deleteNoteId, setDeleteNoteId] = useState<string | null>(null);
+  const [deletingNote, setDeletingNote] = useState(false);
 
   async function handleToggleActive() {
     if (!student) return;
@@ -82,6 +108,74 @@ export default function StudentDetailPage() {
       setTogglingActive(false);
     }
   }
+
+  async function handleDeleteNote() {
+    if (!deleteNoteId) return;
+    setDeletingNote(true);
+    try {
+      const res = await fetch("/api/guidance-notes/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ note_id: deleteNoteId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Bir hata oluştu.");
+      toast.success("Not silindi.");
+      refetchNotes();
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setDeletingNote(false);
+      setDeleteNoteId(null);
+    }
+  }
+
+  const CATEGORY_COLORS: Record<
+    string,
+    { bg: string; text: string; badge: string; meta: string }
+  > = {
+    Akademik: {
+      bg: "bg-blue-200 dark:bg-blue-900",
+      text: "text-blue-950 dark:text-blue-100",
+      badge: "bg-blue-300/60 text-blue-900 dark:bg-blue-800 dark:text-blue-200",
+      meta: "text-blue-700 dark:text-blue-400",
+    },
+    Kişisel: {
+      bg: "bg-purple-200 dark:bg-purple-900",
+      text: "text-purple-950 dark:text-purple-100",
+      badge:
+        "bg-purple-300/60 text-purple-900 dark:bg-purple-800 dark:text-purple-200",
+      meta: "text-purple-700 dark:text-purple-400",
+    },
+    Kariyer: {
+      bg: "bg-green-200 dark:bg-green-900",
+      text: "text-green-950 dark:text-green-100",
+      badge:
+        "bg-green-300/60 text-green-900 dark:bg-green-800 dark:text-green-200",
+      meta: "text-green-700 dark:text-green-400",
+    },
+    Aile: {
+      bg: "bg-orange-200 dark:bg-orange-900",
+      text: "text-orange-950 dark:text-orange-100",
+      badge:
+        "bg-orange-300/60 text-orange-900 dark:bg-orange-800 dark:text-orange-200",
+      meta: "text-orange-700 dark:text-orange-400",
+    },
+    Diğer: {
+      bg: "bg-amber-200 dark:bg-amber-900",
+      text: "text-amber-950 dark:text-amber-100",
+      badge:
+        "bg-amber-300/60 text-amber-900 dark:bg-amber-800 dark:text-amber-200",
+      meta: "text-amber-700 dark:text-amber-400",
+    },
+  };
+
+  const DEFAULT_COLOR = {
+    bg: "bg-muted",
+    text: "text-foreground",
+    badge: "bg-muted-foreground/20 text-foreground",
+    meta: "text-muted-foreground",
+  };
 
   const initials = student
     ? `${student.first_name[0] ?? ""}${student.last_name[0] ?? ""}`.toUpperCase()
@@ -110,18 +204,18 @@ export default function StudentDetailPage() {
     (r) => r.is_standalone && (showOfficial || !r.is_official),
   );
   const officialResults = examResults.filter((r) => r.is_official);
-
   const currentResults =
     examView === "general"
       ? generalResults
       : examView === "branch"
         ? branchResults
         : officialResults;
-
   const filteredResults = currentResults.filter((r) =>
     r.category.toLowerCase().includes(examSearch.toLowerCase()),
   );
   const grouped = groupByCategory(filteredResults);
+
+  const isTeacher = userData?.role === "teacher";
 
   if (loading) {
     return (
@@ -135,11 +229,6 @@ export default function StudentDetailPage() {
               <div className="h-4 w-56 rounded-lg bg-muted animate-pulse" />
             </div>
           </div>
-        </div>
-        <div className="rounded-2xl border bg-card p-6 space-y-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-12 rounded-xl bg-muted animate-pulse" />
-          ))}
         </div>
       </div>
     );
@@ -231,7 +320,7 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
-      {/* Profil Banner — tam genişlik */}
+      {/* Profil Banner */}
       <div className="rounded-2xl border bg-card p-5 space-y-4">
         <div className="flex items-center gap-4">
           <Avatar className="h-14 w-14 rounded-xl ring-1 ring-border shrink-0">
@@ -262,7 +351,6 @@ export default function StudentDetailPage() {
                 {student.is_active ? "Aktif Hesap" : "Pasif Hesap"}
               </span>
             </div>
-
             {student.email && (
               <p className="text-xs text-muted-foreground mt-0.5 truncate">
                 {student.student_number}
@@ -270,52 +358,49 @@ export default function StudentDetailPage() {
             )}
           </div>
         </div>
-
         <Separator />
-
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-              <UsersIcon className="h-3 w-3 text-muted-foreground" />
+          {[
+            {
+              icon: <UsersIcon className="h-3 w-3 text-muted-foreground" />,
+              label: "E-posta",
+              value: student.email,
+            },
+            {
+              icon: <UsersIcon className="h-3 w-3 text-muted-foreground" />,
+              label: "Sınıf",
+              value: student.grade,
+            },
+            {
+              icon: <UsersIcon className="h-3 w-3 text-muted-foreground" />,
+              label: "Alan",
+              value: student.branch,
+            },
+            {
+              icon: <CalendarIcon className="h-3 w-3 text-muted-foreground" />,
+              label: "Kayıt Tarihi",
+              value: createdAt,
+            },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2 min-w-0">
+              <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
+                {item.icon}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] text-muted-foreground">
+                  {item.label}
+                </p>
+                <p className="text-xs font-medium truncate">
+                  {item.value || "—"}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">E-posta</p>
-              <p className="text-xs font-medium">{student.email}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-              <UsersIcon className="h-3 w-3 text-muted-foreground" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">Sınıf</p>
-              <p className="text-xs font-medium">{student.grade}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-              <UsersIcon className="h-3 w-3 text-muted-foreground" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">Alan</p>
-              <p className="text-xs font-medium">{student.branch}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
-              <CalendarIcon className="h-3 w-3 text-muted-foreground" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">Kayıt Tarihi</p>
-              <p className="text-xs font-medium">{createdAt}</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* İçerik — tam genişlik */}
+      {/* İçerik */}
       <div className="space-y-4">
-        {/* Tab başlıkları */}
         <div className="flex items-center gap-1 border-b">
           <TabButton
             active={activeTab === "general"}
@@ -329,12 +414,14 @@ export default function StudentDetailPage() {
           >
             Sınav Sonuçları
           </TabButton>
-          <TabButton disabled>
-            Rehberlik Notları
-            <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-              Yakında
-            </Badge>
-          </TabButton>
+          {userData?.role === "teacher" && (
+            <TabButton
+              active={activeTab === "notes"}
+              onClick={() => setActiveTab("notes")}
+            >
+              Rehberlik Notları
+            </TabButton>
+          )}
         </div>
 
         {/* Genel Bilgiler */}
@@ -346,51 +433,23 @@ export default function StudentDetailPage() {
             </div>
             <Separator />
             <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-5">
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Ad</p>
-                <p className="text-sm font-medium">{student.first_name}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Soyad</p>
-                <p className="text-sm font-medium">{student.last_name}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Öğrenci No
-                </p>
-                <p className="text-sm font-medium">
-                  {student.student_number ?? "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">E-posta</p>
-                <p className="text-sm font-medium truncate">
-                  {student.email ?? "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Sınıf</p>
-                <p className="text-sm font-medium">{student.grade ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Alan / Şube
-                </p>
-                <p className="text-sm font-medium">{student.branch ?? "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Kayıt Tarihi
-                </p>
-                <p className="text-sm font-medium">{createdAt}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground mb-0.5">
-                  Son Giriş Tarihi
-                </p>
-                <p className="text-sm font-medium">{lastSignInAt || "—"}</p>
-              </div>
+              {[
+                { label: "Ad", value: student.first_name },
+                { label: "Soyad", value: student.last_name },
+                { label: "Öğrenci No", value: student.student_number ?? "—" },
+                { label: "E-posta", value: student.email ?? "—" },
+                { label: "Sınıf", value: student.grade ?? "—" },
+                { label: "Alan / Şube", value: student.branch ?? "—" },
+                { label: "Kayıt Tarihi", value: createdAt },
+                { label: "Son Giriş Tarihi", value: lastSignInAt || "—" },
+              ].map((item) => (
+                <div key={item.label}>
+                  <p className="text-xs text-muted-foreground mb-0.5">
+                    {item.label}
+                  </p>
+                  <p className="text-sm font-medium truncate">{item.value}</p>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -408,7 +467,6 @@ export default function StudentDetailPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Pill + Search */}
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted shrink-0">
                   {(["general", "branch", "official"] as ExamView[]).map(
@@ -450,7 +508,6 @@ export default function StudentDetailPage() {
                     ),
                   )}
                 </div>
-
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
                   <button
                     type="button"
@@ -477,7 +534,6 @@ export default function StudentDetailPage() {
                     Kurum Sınavları
                   </button>
                 </div>
-
                 <div className="relative flex-1 min-w-[160px] max-w-[360px]">
                   <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
@@ -488,39 +544,25 @@ export default function StudentDetailPage() {
                   />
                 </div>
               </div>
-
-              {/* İçerik */}
-              {examView === "official" ? (
-                Object.keys(grouped).length === 0 ? (
-                  <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                    {examSearch
-                      ? "Arama sonucu bulunamadı."
-                      : "Henüz kurum sınavı sonucu bulunmuyor."}
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {Object.entries(grouped).map(([category, results]) => (
-                      <div key={category} className="space-y-2">
-                        <p className="text-sm font-semibold">{category}</p>
-                        <ExamResultsTable results={results} type="general" />
-                      </div>
-                    ))}
-                  </div>
-                )
-              ) : Object.keys(grouped).length === 0 ? (
+              {Object.keys(grouped).length === 0 ? (
                 <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
                   {examSearch
                     ? "Arama sonucu bulunamadı."
                     : examView === "general"
                       ? "Henüz genel deneme sonucu bulunmuyor."
-                      : "Henüz branş denemesi sonucu bulunmuyor."}
+                      : examView === "branch"
+                        ? "Henüz branş denemesi sonucu bulunmuyor."
+                        : "Henüz kurum sınavı sonucu bulunmuyor."}
                 </div>
               ) : (
                 <div className="space-y-6">
                   {Object.entries(grouped).map(([category, results]) => (
                     <div key={category} className="space-y-2">
                       <p className="text-sm font-semibold">{category}</p>
-                      <ExamResultsTable results={results} type={examView} />
+                      <ExamResultsTable
+                        results={results}
+                        type={examView === "official" ? "general" : examView}
+                      />
                     </div>
                   ))}
                 </div>
@@ -528,19 +570,196 @@ export default function StudentDetailPage() {
             </div>
           ))}
 
-        {/* Rehberlik Notları */}
+        {/* Rehberlik Notları Sekmesi */}
         {activeTab === "notes" && (
-          <div className="rounded-2xl border border-dashed bg-card/50 p-10 flex flex-col items-center gap-2 text-center">
-            <BookOpenIcon className="h-7 w-7 text-muted-foreground/30" />
-            <p className="text-sm font-medium text-muted-foreground/50">
-              Rehberlik Notları
-            </p>
-            <p className="text-xs text-muted-foreground/40">
-              Bu bölüm yakında eklenecek.
-            </p>
+          <div className="space-y-4">
+            {isTeacher && (
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => setAddNoteOpen(true)}
+                  className="gap-1.5 cursor-pointer"
+                >
+                  <PlusIcon className="h-4 w-4" />
+                  <span>Not Ekle</span>
+                </Button>
+              </div>
+            )}
+
+            {notesLoading ? (
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="break-inside-avoid rounded-sm bg-muted animate-pulse mb-4 h-32"
+                  />
+                ))}
+              </div>
+            ) : notes.length === 0 ? (
+              <div className="p-10 flex flex-col items-center gap-2 text-center border border-dashed rounded-2xl">
+                <BookOpenIcon className="h-7 w-7 text-muted-foreground/30" />
+                <p className="text-sm font-medium text-muted-foreground/60">
+                  Henüz rehberlik notu bulunmuyor
+                </p>
+              </div>
+            ) : (
+              <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+                {notes.map((note) => {
+                  const colors =
+                    CATEGORY_COLORS[note.category] ?? DEFAULT_COLOR;
+                  return (
+                    <div
+                      key={note.id}
+                      className="break-inside-avoid mb-4 relative group"
+                    >
+                      <div
+                        className={cn(
+                          "relative p-5 space-y-3 rounded-l-lg rounded-tr-lg overflow-hidden",
+                          colors.bg,
+                          // Sağ alt köşe kıvrığı efekti
+                          "before:content-[''] before:absolute before:bottom-0 before:right-0",
+                          "before:w-8 before:h-8",
+                          "before:border-l-16 before:border-t-16 before:border-l-transparent before:border-t-transparent",
+                          "before:border-r-16 before:border-b-16 before:border-r-white/30 before:border-b-white/30",
+                          "dark:before:border-r-black/20 dark:before:border-b-black/20",
+                        )}
+                      >
+                        {/* Kart Üstü: Kategori + Gizlilik + Aksiyonlar */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={cn(
+                                "text-xs font-semibold px-2 py-0.5 rounded-full",
+                                colors.badge,
+                              )}
+                            >
+                              {note.category}
+                            </span>
+                            <span
+                              className={cn(
+                                "text-[10px] flex items-center gap-1",
+                                colors.meta,
+                              )}
+                            >
+                              {note.is_private ? (
+                                <LockIcon className="h-2.5 w-2.5" />
+                              ) : (
+                                <LockOpenIcon className="h-2.5 w-2.5" />
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Sadece hoca için düzenle/sil butonları (hover olunca görünür) */}
+                          {isTeacher && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => setEditNote(note)}
+                                className={cn(
+                                  "p-1 rounded hover:bg-black/5 hover:cursor-pointer transition-colors",
+                                  colors.meta,
+                                )}
+                              >
+                                <PencilIcon className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteNoteId(note.id)}
+                                className="p-1 rounded hover:bg-destructive/10 text-destructive hover:cursor-pointer transition-colors"
+                              >
+                                <Trash2Icon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* İçerik */}
+                        <p
+                          className={cn(
+                            "text-sm leading-relaxed whitespace-pre-wrap font-medium",
+                            colors.text,
+                          )}
+                        >
+                          {note.content}
+                        </p>
+
+                        {/* Kart Altı: Tarih + Öğretmen */}
+                        <div
+                          className={cn(
+                            "flex items-center justify-between",
+                            colors.meta,
+                          )}
+                        >
+                          <span className="text-[10px]">
+                            {new Date(note.meeting_date).toLocaleDateString(
+                              "tr-TR",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
+                          </span>
+                          {note.teacher && (
+                            <p className="text-[10px] font-semibold truncate max-w-[100px]">
+                              {note.teacher.full_name}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      {/* Dialogs */}
+      <AddGuidanceNoteDialog
+        open={addNoteOpen}
+        onOpenChange={setAddNoteOpen}
+        onSuccess={refetchNotes}
+        studentId={id}
+      />
+
+      {editNote && (
+        <EditGuidanceNoteDialog
+          open={!!editNote}
+          onOpenChange={(o) => !o && setEditNote(null)}
+          onSuccess={refetchNotes}
+          note={editNote}
+        />
+      )}
+
+      <AlertDialog
+        open={!!deleteNoteId}
+        onOpenChange={(o) => !o && setDeleteNoteId(null)}
+      >
+        <AlertDialogContent className="bg-popover ring-border">
+          <AlertDialogHeader className="bg-popover">
+            <AlertDialogTitle className="text-lg font-semibold">
+              Notu silmek istediğinize emin misiniz?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              Bu rehberlik notu kalıcı olarak silinecek. Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="bg-popover">
+            <AlertDialogCancel
+              disabled={deletingNote}
+              className="cursor-pointer"
+            >
+              Vazgeç
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteNote}
+              disabled={deletingNote}
+              className="bg-destructive/90! text-destructive-foreground hover:bg-destructive! cursor-pointer"
+            >
+              {deletingNote ? "Siliniyor..." : "Evet, Sil"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

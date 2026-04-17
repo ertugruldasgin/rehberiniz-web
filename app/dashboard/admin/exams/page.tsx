@@ -6,9 +6,11 @@ import { ExamsList } from "@/components/exams-list";
 import { AddExamDialog } from "@/components/add-exam-dialog";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
+import { useExams } from "@/hooks/use-exams";
 
 export default function ExamsPage() {
   const [addOpen, setAddOpen] = useState(false);
+  const { refetch } = useExams();
 
   return (
     <div className="w-full px-4 md:px-6 space-y-6">
@@ -33,7 +35,7 @@ export default function ExamsPage() {
       <AddExamDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onSuccess={() => {}}
+        onSuccess={refetch}
       />
     </div>
   );
