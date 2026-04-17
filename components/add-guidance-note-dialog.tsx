@@ -13,10 +13,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { BookOpenIcon, EyeIcon, LockIcon } from "lucide-react";
+import { EyeIcon, LockIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { Switch } from "./ui/switch";
 import {
   Select,
@@ -31,6 +30,7 @@ const SUGGESTED_CATEGORIES = [
   "Kişisel",
   "Kariyer",
   "Aile",
+  "Rehberlik Notu",
   "Diğer",
 ];
 

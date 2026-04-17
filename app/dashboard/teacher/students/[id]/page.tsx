@@ -161,6 +161,12 @@ export default function StudentDetailPage() {
         "bg-orange-300/60 text-orange-900 dark:bg-orange-800 dark:text-orange-200",
       meta: "text-orange-700 dark:text-orange-400",
     },
+    "Rehberlik Notu": {
+      bg: "bg-cyan-200 dark:bg-cyan-900",
+      text: "text-cyan-950 dark:text-cyan-100",
+      badge: "bg-cyan-300/60 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-200",
+      meta: "text-cyan-700 dark:text-cyan-400",
+    },
     Diğer: {
       bg: "bg-amber-200 dark:bg-amber-900",
       text: "text-amber-950 dark:text-amber-100",

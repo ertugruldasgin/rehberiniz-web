@@ -32,6 +32,7 @@ const SUGGESTED_CATEGORIES = [
   "Kişisel",
   "Kariyer",
   "Aile",
+  "Rehberlik Notu",
   "Diğer",
 ];
 
