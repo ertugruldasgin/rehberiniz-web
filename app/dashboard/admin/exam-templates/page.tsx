@@ -63,7 +63,6 @@ export default function ExamTemplatesPage() {
     );
   }
 
-  // Genel (organization_id null) ve kurum şablonlarını ayır
   const generalTemplates = templates.filter((t) => !t.organization_id);
   const customTemplates = templates.filter((t) => !!t.organization_id);
 
@@ -103,7 +102,6 @@ export default function ExamTemplatesPage() {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Genel Şablonlar */}
           {generalTemplates.length > 0 && (
             <div className="space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -122,7 +120,6 @@ export default function ExamTemplatesPage() {
             </div>
           )}
 
-          {/* Kurum Şablonları */}
           {customTemplates.length > 0 && (
             <div className="space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -194,52 +191,100 @@ function TemplateCard({
   canDelete: boolean;
   onDelete: () => void;
 }) {
+  const wrongPenaltyLabel =
+    t.wrong_penalty === 0.25
+      ? "4'te 1"
+      : t.wrong_penalty === 0.333
+        ? "3'te 1"
+        : t.wrong_penalty === 0
+          ? "Ceza yok"
+          : `${t.wrong_penalty}`;
+
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 space-y-3 transition-colors">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="font-semibold text-sm truncate">{t.name}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              {t.sections.length} bölüm
-            </p>
-          </div>
-          <Badge variant="secondary" className="shrink-0">
-            {t.category}
-          </Badge>
+    <div className="flex flex-col justify-between rounded-2xl border border-border bg-card p-5 gap-3 transition-colors">
+      {/* Üst: isim + kategori */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <h3 className="font-semibold text-sm truncate">{t.name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {t.sections.length} bölüm
+          </p>
         </div>
-        <div className="space-y-1.5">
-          {t.sections.map((s) => (
-            <div
-              key={s.key}
-              className="flex items-center justify-between text-xs"
-            >
-              <span className="text-muted-foreground truncate">{s.label}</span>
-              <span className="text-foreground font-medium tabular-nums shrink-0 ml-2">
-                {s.questions} soru
-              </span>
-            </div>
-          ))}
-        </div>
+        <Badge variant="secondary" className="shrink-0">
+          {t.category}
+        </Badge>
       </div>
-      <div className="flex items-center justify-between pt-1 border-t">
-        <p className="text-xs text-muted-foreground">
-          Toplam:{" "}
-          <span className="font-semibold text-foreground">
-            {t.sections.reduce((a, s) => a + s.questions, 0)}
-          </span>{" "}
-          soru
-        </p>
-        {canDelete && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onDelete}
-            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+
+      {/* Section listesi */}
+      <div className="space-y-1">
+        <div
+          className={`grid gap-x-2 px-0.5 mb-1 ${canDelete ? "grid-cols-[1fr_40px_52px]" : "grid-cols-[1fr_40px]"}`}
+        >
+          <p className="text-[11px] text-muted-foreground/60">Bölüm</p>
+          <p className="text-[11px] text-muted-foreground/60 text-right">
+            Soru
+          </p>
+          {canDelete && (
+            <p className="text-[11px] text-muted-foreground/60 text-right">
+              Katsayı
+            </p>
+          )}
+        </div>
+        {t.sections.map((s) => (
+          <div
+            key={s.key}
+            className={`grid gap-x-2 items-center text-xs ${canDelete ? "grid-cols-[1fr_40px_52px]" : "grid-cols-[1fr_40px]"}`}
           >
-            <Trash2Icon className="h-3.5 w-3.5" />
-          </Button>
+            <span className="text-muted-foreground truncate">{s.label}</span>
+            <span className="text-foreground font-medium tabular-nums text-right">
+              {s.questions}
+            </span>
+            {canDelete && (
+              <span className="text-primary font-medium tabular-nums text-right">
+                {s.coefficient ?? "—"}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Alt: puanlama + toplam */}
+      <div className="space-y-1.5 pt-2 border-t">
+        {canDelete && (
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Başlangıç / Maks</span>
+            <span className="tabular-nums font-medium text-foreground">
+              {t.base_score ?? 100} / {t.max_score ?? 500}
+            </span>
+          </div>
         )}
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Toplam{" "}
+            <span className="font-semibold text-foreground">
+              {t.sections.reduce((a, s) => a + s.questions, 0)}
+            </span>{" "}
+            soru
+            {canDelete && (
+              <span className="ml-2">
+                <span className="font-semibold text-foreground">
+                  {wrongPenaltyLabel}
+                </span>{" "}
+                yanlış cezası
+              </span>
+            )}
+          </p>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onDelete}
+              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
+            >
+              <Trash2Icon className="h-3.5 w-3.5" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

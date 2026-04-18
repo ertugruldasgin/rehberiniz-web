@@ -25,6 +25,7 @@ import {
   PlusIcon,
   Trash2Icon,
   InfoIcon,
+  SlidersHorizontalIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ interface Section {
   key: string;
   label: string;
   questions: number;
+  coefficient: number;
 }
 
 interface AddExamTemplateDialogProps {
@@ -43,7 +45,12 @@ interface AddExamTemplateDialogProps {
 
 const CATEGORIES = ["TYT", "AYT", "YDT", "LGS"];
 
-const EMPTY_SECTION: Section = { key: "", label: "", questions: 0 };
+const EMPTY_SECTION: Section = {
+  key: "",
+  label: "",
+  questions: 0,
+  coefficient: 1.0,
+};
 
 export function AddExamTemplateDialog({
   open,
@@ -52,6 +59,9 @@ export function AddExamTemplateDialog({
 }: AddExamTemplateDialogProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
+  const [baseScore, setBaseScore] = useState<number>(100);
+  const [maxScore, setMaxScore] = useState<number>(500);
+  const [wrongPenalty, setWrongPenalty] = useState<number>(0.25);
   const [sections, setSections] = useState<Section[]>([{ ...EMPTY_SECTION }]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -66,6 +76,8 @@ export function AddExamTemplateDialog({
         if (i !== index) return s;
         if (field === "questions")
           return { ...s, questions: Math.max(0, parseInt(value) || 0) };
+        if (field === "coefficient")
+          return { ...s, coefficient: Math.max(0, parseFloat(value) || 0) };
         if (field === "label") {
           const key = value
             .toLowerCase()
@@ -110,6 +122,10 @@ export function AddExamTemplateDialog({
         newErrors[`section_${i}_questions`] = "En az 1 soru.";
         valid = false;
       }
+      if (!s.coefficient || s.coefficient <= 0) {
+        newErrors[`section_${i}_coefficient`] = "0'dan büyük olmalı.";
+        valid = false;
+      }
     });
 
     setErrors(newErrors);
@@ -123,7 +139,14 @@ export function AddExamTemplateDialog({
       const res = await fetch("/api/exam-templates/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, category, sections }),
+        body: JSON.stringify({
+          name,
+          category,
+          sections,
+          base_score: baseScore,
+          max_score: maxScore,
+          wrong_penalty: wrongPenalty,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Bir hata oluştu.");
@@ -140,6 +163,9 @@ export function AddExamTemplateDialog({
   function handleClose() {
     setName("");
     setCategory("");
+    setBaseScore(100);
+    setMaxScore(500);
+    setWrongPenalty(0.25);
     setSections([{ ...EMPTY_SECTION }]);
     setErrors({});
     onOpenChange(false);
@@ -182,7 +208,7 @@ export function AddExamTemplateDialog({
                       setName(e.target.value);
                       setErrors((p) => ({ ...p, name: "" }));
                     }}
-                    placeholder="TYT Deneme"
+                    placeholder="Ad"
                     className={`h-10 ${errors.name ? "border-destructive" : ""}`}
                     disabled={loading}
                   />
@@ -228,6 +254,83 @@ export function AddExamTemplateDialog({
               </div>
             </div>
 
+            {/* Puanlama Ayarları */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontalIcon className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm font-semibold">Puanlama Ayarları</p>
+              </div>
+              <Separator />
+              <div className="flex flex-col gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="base_score">Taban Puan</Label>
+                  <Input
+                    id="base_score"
+                    type="number"
+                    min={0}
+                    value={baseScore}
+                    onChange={(e) =>
+                      setBaseScore(parseFloat(e.target.value) || 0)
+                    }
+                    className="h-10 text-center tabular-nums"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    0 net = {baseScore} puan
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="max_score">Maksimum Puan</Label>
+                  <Input
+                    id="max_score"
+                    type="number"
+                    min={1}
+                    value={maxScore}
+                    onChange={(e) =>
+                      setMaxScore(parseFloat(e.target.value) || 500)
+                    }
+                    className="h-10 text-center tabular-nums"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tam doğru = {maxScore} puan
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wrong_penalty">Yanlış Cezası</Label>
+                  <Select
+                    value={String(wrongPenalty)}
+                    onValueChange={(v) => setWrongPenalty(parseFloat(v))}
+                    disabled={loading}
+                  >
+                    <SelectTrigger className="h-10! w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="p-1">
+                      <SelectItem
+                        value="0.25"
+                        className="rounded-lg cursor-pointer py-1 px-3"
+                      >
+                        4'te 1
+                      </SelectItem>
+                      <SelectItem
+                        value="0.333"
+                        className="rounded-lg cursor-pointer py-1 px-3"
+                      >
+                        3'te 1
+                      </SelectItem>
+                      <SelectItem
+                        value="0"
+                        className="rounded-lg cursor-pointer py-1 px-3"
+                      >
+                        Ceza yok
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             {/* Bölümler */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -261,8 +364,7 @@ export function AddExamTemplateDialog({
               <Separator />
 
               <div className="space-y-3">
-                {/* Tablo başlığı */}
-                <div className="grid grid-cols-[1fr_1fr_80px_32px] gap-3 px-1">
+                <div className="grid grid-cols-[1fr_1fr_52px_52px_20px] gap-2 px-1">
                   <p className="text-xs text-muted-foreground font-medium">
                     Bölüm Adı
                   </p>
@@ -272,13 +374,16 @@ export function AddExamTemplateDialog({
                   <p className="text-xs text-muted-foreground font-medium">
                     Soru
                   </p>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Katsayı
+                  </p>
                   <div />
                 </div>
 
                 {sections.map((s, i) => (
                   <div
                     key={i}
-                    className="grid grid-cols-[1fr_1fr_80px_32px] gap-3 items-start"
+                    className="grid grid-cols-[1fr_1fr_52px_52px_20px] gap-2 items-start"
                   >
                     <div className="space-y-1">
                       <Input
@@ -286,7 +391,7 @@ export function AddExamTemplateDialog({
                         onChange={(e) =>
                           handleSectionChange(i, "label", e.target.value)
                         }
-                        placeholder="TYT Türkçe"
+                        placeholder="Ad"
                         className={`h-9 ${errors[`section_${i}_label`] ? "border-destructive" : ""}`}
                         disabled={loading}
                       />
@@ -299,7 +404,7 @@ export function AddExamTemplateDialog({
                     <Input
                       value={s.key}
                       readOnly
-                      placeholder="tyt-turkce"
+                      placeholder="ad"
                       className="h-9 bg-muted/50 text-muted-foreground text-xs"
                     />
                     <div className="space-y-1">
@@ -311,12 +416,31 @@ export function AddExamTemplateDialog({
                           handleSectionChange(i, "questions", e.target.value)
                         }
                         placeholder="40"
-                        className={`h-9 text-center ${errors[`section_${i}_questions`] ? "border-destructive" : ""}`}
+                        className={`h-9 text-center tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors[`section_${i}_questions`] ? "border-destructive" : ""}`}
                         disabled={loading}
                       />
                       {errors[`section_${i}_questions`] && (
                         <p className="text-xs text-destructive">
                           {errors[`section_${i}_questions`]}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        value={s.coefficient || ""}
+                        onChange={(e) =>
+                          handleSectionChange(i, "coefficient", e.target.value)
+                        }
+                        placeholder="1.0"
+                        className={`h-9 text-center tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors[`section_${i}_coefficient`] ? "border-destructive" : ""}`}
+                        disabled={loading}
+                      />
+                      {errors[`section_${i}_coefficient`] && (
+                        <p className="text-xs text-destructive">
+                          {errors[`section_${i}_coefficient`]}
                         </p>
                       )}
                     </div>
@@ -326,7 +450,7 @@ export function AddExamTemplateDialog({
                       size="icon"
                       onClick={() => removeSection(i)}
                       disabled={loading || sections.length === 1}
-                      className="h-9 w-9 text-muted-foreground hover:text-destructive cursor-pointer shrink-0"
+                      className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer shrink-0"
                     >
                       <Trash2Icon className="h-3.5 w-3.5" />
                     </Button>

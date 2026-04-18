@@ -19,4 +19,5 @@ export interface ExamResult {
   total_incorrect: number;
   total_empty: number;
   total_net: number;
+  total_score: number;
 }

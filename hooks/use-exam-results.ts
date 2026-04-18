@@ -15,6 +15,7 @@ async function fetchResults(
     total_incorrect,
     total_empty,
     total_net,
+    total_score,
     exams (
       title,
       date,
@@ -72,6 +73,7 @@ async function fetchResults(
       total_incorrect: r.total_incorrect,
       total_empty: r.total_empty,
       total_net: r.total_net,
+      total_score: r.total_score,
       subjects: (r.subject_results ?? []).map((s: any) => ({
         subject_id: s.id,
         subject_name: s.subjects?.name ?? s.section_label ?? "—",

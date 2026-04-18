@@ -159,9 +159,18 @@ function GeneralResultsTable({
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(result.exam_date)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(result.exam_date)}
+                    </span>
+                    {/* TODO: puan kismi duzeltilecek */}
+                    {result.total_score > 0 && (
+                      <span className="text-xs font-semibold text-primary tabular-nums">
+                        {result.total_score.toFixed(2)}
+                        puan
+                      </span>
+                    )}
+                  </div>
                 </div>
               </TableCell>
               {result.subjects.map((s) =>
@@ -248,9 +257,18 @@ function BranchResultsTable({
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(result.exam_date)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDate(result.exam_date)}
+                    </span>
+                    {/* TODO: puan kismi duzeltilecek */}
+                    {result.total_score > 0 && (
+                      <span className="text-xs font-semibold text-primary tabular-nums">
+                        {result.total_score.toFixed(2)}
+                        puan
+                      </span>
+                    )}
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">

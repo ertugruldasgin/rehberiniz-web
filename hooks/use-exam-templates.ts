@@ -5,6 +5,7 @@ export interface ExamSection {
   key: string;
   label: string;
   questions: number;
+  coefficient?: number;
 }
 
 export interface ExamTemplate {
@@ -13,6 +14,9 @@ export interface ExamTemplate {
   category: string;
   sections: ExamSection[];
   organization_id: string | null;
+  base_score: number;
+  max_score: number;
+  wrong_penalty: number;
 }
 
 export function useExamTemplates() {
@@ -39,7 +43,9 @@ export function useExamTemplates() {
 
     const { data } = await supabase
       .from("exam_templates")
-      .select("id, name, category, sections, organization_id")
+      .select(
+        "id, name, category, sections, organization_id, base_score, max_score, wrong_penalty",
+      )
       .or(
         `organization_id.eq.${member?.organization_id},organization_id.is.null`,
       )
