@@ -204,9 +204,9 @@ export function StudentsTable({
       )}
 
       {filtered.length > 0 && (
-        <div className="px-4 py-3 border-t bg-muted/80 text-xs text-muted-foreground">
+        <div className="px-4 py-3 text-xs text-muted-foreground">
           {search
-            ? `${filtered.length} sonuç gösteriliyor`
+            ? `${filtered.length} / ${students.length} öğrenci`
             : `${students.length} öğrenci`}
         </div>
       )}

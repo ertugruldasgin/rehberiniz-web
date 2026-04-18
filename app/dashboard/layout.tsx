@@ -3,7 +3,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { UserRoleProvider } from "@/hooks/use-user-role";
 
-export default function StudentLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
