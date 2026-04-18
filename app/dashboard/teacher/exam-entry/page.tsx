@@ -88,7 +88,7 @@ export default function ExamEntryPage() {
   return (
     <div className="flex flex-col px-4 md:px-6 gap-4">
       <PageHeader
-        title="Sonuç Girişi"
+        title="Sonuç Yönetimi"
         description="Öğrencilerinizin sınav sonuçlarını görüntüleyin ve yönetin."
       />
 

@@ -46,16 +46,16 @@ export function getNavItems(role: UserRole) {
             url: "/dashboard/admin/exams",
             icon: <ClipboardListIcon />,
           },
-          {
-            title: "Sınav Şablonları",
-            url: "/dashboard/admin/exam-templates",
-            icon: <FileTextIcon />,
-          },
         ],
       },
       {
         group: "Kurum",
         items: [
+          {
+            title: "Sınav Şablonları",
+            url: "/dashboard/admin/exam-templates",
+            icon: <FileTextIcon />,
+          },
           {
             title: "Raporlar",
             url: "/dashboard/admin/reports",
@@ -99,14 +99,14 @@ export function getNavItems(role: UserRole) {
         group: "Sınavlar",
         items: [
           {
-            title: "Sonuç Girişi",
-            url: "/dashboard/teacher/exam-entry",
-            icon: <BetweenHorizontalEnd />,
-          },
-          {
-            title: "Sınav Geçmişi",
+            title: "Sınavlar",
             url: "/dashboard/teacher/exam-history",
             icon: <GalleryHorizontalEnd />,
+          },
+          {
+            title: "Sonuç Yönetimi",
+            url: "/dashboard/teacher/exam-entry",
+            icon: <BetweenHorizontalEnd />,
           },
         ],
       },

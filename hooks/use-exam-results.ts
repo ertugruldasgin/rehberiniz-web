@@ -105,7 +105,7 @@ export function useMyExamResults() {
         .from("students")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (!student) throw new Error("Öğrenci kaydı bulunamadı.");
 
       const data = await fetchResults(supabase, student.id);

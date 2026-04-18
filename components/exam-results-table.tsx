@@ -78,7 +78,6 @@ export function ExamResultsTable({
 }: ExamResultsTableProps) {
   if (results.length === 0) return null;
 
-  //const effectiveType = results[0]?.subjects?.length === 1 ? "branch" : type;
   const effectiveType = results[0]?.is_standalone ? "branch" : type;
 
   if (effectiveType === "branch")
@@ -130,16 +129,17 @@ function GeneralResultsTable({
                 {subject}
               </TableHead>
             ))}
-            <TableHead colSpan={isCompact ? 1 : 4} className="text-center">
+            <TableHead colSpan={isCompact ? 2 : 5} className="text-center">
               Toplam
             </TableHead>
           </TableRow>
           {!isCompact && (
             <TableRow className="border-border bg-muted/20">
               <TableHead className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]" />
-              {[...subjects, "Toplam"].map((name) => (
+              {subjects.map((name) => (
                 <SubHeaders key={`sub-${name}`} />
               ))}
+              <TotalSubHeaders />
             </TableRow>
           )}
         </TableHeader>
@@ -159,18 +159,9 @@ function GeneralResultsTable({
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(result.exam_date)}
-                    </span>
-                    {/* TODO: puan kismi duzeltilecek */}
-                    {result.total_score > 0 && (
-                      <span className="text-xs font-semibold text-primary tabular-nums">
-                        {result.total_score.toFixed(2)}
-                        puan
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(result.exam_date)}
+                  </span>
                 </div>
               </TableCell>
               {result.subjects.map((s) =>
@@ -192,16 +183,23 @@ function GeneralResultsTable({
                 ),
               )}
               {isCompact ? (
-                <TableCell className="text-center tabular-nums font-bold">
-                  {result.total_net.toFixed(2)}
-                </TableCell>
+                <>
+                  <TableCell className="text-center tabular-nums font-bold">
+                    {result.total_net.toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-center tabular-nums font-bold text-primary">
+                    {result.total_score > 0
+                      ? result.total_score.toFixed(2)
+                      : "—"}
+                  </TableCell>
+                </>
               ) : (
-                <SubjectCells
+                <TotalCells
                   correct={result.total_correct}
                   incorrect={result.total_incorrect}
                   empty={result.total_empty}
                   net={result.total_net}
-                  isTotal
+                  score={result.total_score}
                 />
               )}
             </TableRow>
@@ -238,7 +236,12 @@ function BranchResultsTable({
             <TableHead className="text-center text-xs font-normal text-muted-foreground">
               B
             </TableHead>
-            <TableHead className="text-center">Net</TableHead>
+            <TableHead className="text-center text-xs font-normal">
+              Net
+            </TableHead>
+            <TableHead className="text-center text-xs font-normal text-primary">
+              Puan
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody className="bg-card">
@@ -257,18 +260,9 @@ function BranchResultsTable({
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
                   </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDate(result.exam_date)}
-                    </span>
-                    {/* TODO: puan kismi duzeltilecek */}
-                    {result.total_score > 0 && (
-                      <span className="text-xs font-semibold text-primary tabular-nums">
-                        {result.total_score.toFixed(2)}
-                        puan
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(result.exam_date)}
+                  </span>
                 </div>
               </TableCell>
               <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">
@@ -282,6 +276,9 @@ function BranchResultsTable({
               </TableCell>
               <TableCell className="text-center tabular-nums font-bold">
                 {(result.subjects[0]?.net ?? 0).toFixed(2)}
+              </TableCell>
+              <TableCell className="text-center tabular-nums font-bold text-primary">
+                {result.total_score > 0 ? result.total_score.toFixed(2) : "—"}
               </TableCell>
             </TableRow>
           ))}
@@ -310,18 +307,38 @@ function SubHeaders() {
   );
 }
 
+function TotalSubHeaders() {
+  return (
+    <>
+      <TableHead className="w-10 text-center text-xs font-normal text-green-600 dark:text-green-400">
+        D
+      </TableHead>
+      <TableHead className="w-10 text-center text-xs font-normal text-red-500 dark:text-red-400">
+        Y
+      </TableHead>
+      <TableHead className="w-10 text-center text-xs font-normal text-muted-foreground">
+        B
+      </TableHead>
+      <TableHead className="w-10 text-center text-xs font-normal">
+        Net
+      </TableHead>
+      <TableHead className="w-16 text-center text-xs font-normal text-primary">
+        Puan
+      </TableHead>
+    </>
+  );
+}
+
 function SubjectCells({
   correct,
   incorrect,
   empty,
   net,
-  isTotal = false,
 }: {
   correct: number;
   incorrect: number;
   empty: number;
   net: number;
-  isTotal?: boolean;
 }) {
   return (
     <>
@@ -334,10 +351,42 @@ function SubjectCells({
       <TableCell className="text-center tabular-nums text-muted-foreground">
         {empty}
       </TableCell>
-      <TableCell
-        className={cn("text-center tabular-nums", isTotal && "font-bold")}
-      >
+      <TableCell className="text-center tabular-nums">
         {net.toFixed(2)}
+      </TableCell>
+    </>
+  );
+}
+
+function TotalCells({
+  correct,
+  incorrect,
+  empty,
+  net,
+  score,
+}: {
+  correct: number;
+  incorrect: number;
+  empty: number;
+  net: number;
+  score: number;
+}) {
+  return (
+    <>
+      <TableCell className="text-center tabular-nums text-green-600 dark:text-green-400">
+        {correct}
+      </TableCell>
+      <TableCell className="text-center tabular-nums text-red-500 dark:text-red-400">
+        {incorrect}
+      </TableCell>
+      <TableCell className="text-center tabular-nums text-muted-foreground">
+        {empty}
+      </TableCell>
+      <TableCell className="text-center tabular-nums font-bold">
+        {net.toFixed(2)}
+      </TableCell>
+      <TableCell className="text-center tabular-nums font-bold text-primary">
+        {score > 0 ? score.toFixed(2) : "—"}
       </TableCell>
     </>
   );

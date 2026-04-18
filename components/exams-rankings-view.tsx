@@ -49,11 +49,14 @@ export function ExamsRankingsView({
   const [deleting, setDeleting] = useState(false);
   const [search, setSearch] = useState("");
 
-  const { rankings, loading: rankingsLoading } = useExamRankings(
-    selectedExam?.id ?? null,
-  );
+  const {
+    rankings,
+    assigned,
+    loading: rankingsLoading,
+  } = useExamRankings(selectedExam?.id ?? null);
 
   const subjects = rankings[0]?.subjects.map((s) => s.subject_name) ?? [];
+  const totalCols = 2 + subjects.length * 4 + 5;
 
   const filteredExams = exams.filter((e) =>
     e.title.toLowerCase().includes(search.toLowerCase()),
@@ -190,23 +193,6 @@ export function ExamsRankingsView({
               })}
             </div>
           )}
-
-          {canDelete && selectedExam && (
-            <div className="p-3 border-t shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setDeleteId(selectedExam.id);
-                  setDeleteTitle(selectedExam.title);
-                }}
-                className="w-full gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 cursor-pointer"
-              >
-                <Trash2Icon className="h-3.5 w-3.5" />
-                Sınavı Sil
-              </Button>
-            </div>
-          )}
         </div>
 
         {/* Sağ — sonuç tablosu */}
@@ -231,6 +217,7 @@ export function ExamsRankingsView({
             </div>
           ) : (
             <>
+              {/* Header */}
               <div className="flex items-center bg-muted/80 gap-3 px-4 py-3 border-b shrink-0">
                 <button
                   type="button"
@@ -253,6 +240,11 @@ export function ExamsRankingsView({
                     })}
                     {" · "}
                     {rankings.length} sonuç
+                    {assigned.length > 0 && (
+                      <span className="ml-1 text-muted-foreground/60">
+                        · {assigned.length} bekliyor
+                      </span>
+                    )}
                   </p>
                 </div>
                 {canDelete && (
@@ -279,13 +271,6 @@ export function ExamsRankingsView({
                     />
                   ))}
                 </div>
-              ) : rankings.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center gap-3 text-center p-6">
-                  <ClipboardListIcon className="h-8 w-8 text-muted-foreground/30" />
-                  <p className="text-sm text-muted-foreground">
-                    Henüz sonuç girilmemiş.
-                  </p>
-                </div>
               ) : (
                 <div className="overflow-auto">
                   <table className="w-full text-xs">
@@ -307,13 +292,10 @@ export function ExamsRankingsView({
                           </th>
                         ))}
                         <th
-                          colSpan={4}
+                          colSpan={5}
                           className="text-center px-2 py-3 font-medium text-muted-foreground border-l"
                         >
                           Toplam
-                        </th>
-                        <th className="text-center px-4 py-3 font-medium text-muted-foreground border-l">
-                          Puan
                         </th>
                       </tr>
                       <tr className="border-b bg-muted/20">
@@ -347,66 +329,124 @@ export function ExamsRankingsView({
                         <th className="text-center px-2 py-1.5 font-normal">
                           Net
                         </th>
-                        <th className="px-4 py-1.5 border-l" />
+                        <th className="text-center px-2 py-1.5 font-normal text-primary">
+                          Puan
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
-                      {rankings.map((r, idx) => (
-                        <tr
-                          key={r.student_id}
-                          className={cn(
-                            "hover:bg-muted/30 transition-colors",
-                            idx === 0 && "bg-amber-100/70",
-                          )}
-                        >
-                          <td className="px-4 py-3 tabular-nums text-muted-foreground font-medium">
-                            {idx + 1}
-                          </td>
-                          <td className="px-4 py-3">
-                            <Link
-                              href={`${studentLinkPrefix}/${r.student_id}`}
-                              className="font-semibold text-foreground hover:underline"
-                            >
-                              {r.first_name} {r.last_name}
-                            </Link>
-                            <p className="text-muted-foreground text-[11px]">
-                              {r.grade ? `${r.grade} - ` : ""}
-                              {r.student_number ?? "—"}
-                            </p>
-                          </td>
-                          {r.subjects.map((s) => (
-                            <Fragment key={`${r.student_id}-${s.subject_name}`}>
-                              <td className="text-center px-2 py-3 tabular-nums text-green-600 dark:text-green-400 border-l">
-                                {s.correct}
-                              </td>
-                              <td className="text-center px-2 py-3 tabular-nums text-red-500">
-                                {s.incorrect}
-                              </td>
-                              <td className="text-center px-2 py-3 tabular-nums text-muted-foreground">
-                                {s.empty}
-                              </td>
-                              <td className="text-center px-2 py-3 tabular-nums font-medium">
-                                {s.net.toFixed(2)}
-                              </td>
-                            </Fragment>
-                          ))}
-                          <td className="text-center px-2 py-3 tabular-nums text-green-600 dark:text-green-400 border-l">
-                            {r.total_correct}
-                          </td>
-                          <td className="text-center px-2 py-3 tabular-nums text-red-500">
-                            {r.total_incorrect}
-                          </td>
-                          <td className="text-center px-2 py-3 tabular-nums text-muted-foreground">
-                            {r.total_empty}
-                          </td>
-                          <td className="text-center px-2 py-3 tabular-nums font-bold">
-                            {r.total_net.toFixed(2)}
-                          </td>
-                          <td className="text-center px-4 py-3 tabular-nums font-bold text-primary border-l">
-                            {r.total_score.toFixed(2)}
+                      {rankings.length === 0 && assigned.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={totalCols}
+                            className="text-center py-12 text-sm text-muted-foreground"
+                          >
+                            Henüz sonuç girilmemiş.
                           </td>
                         </tr>
-                      ))}
+                      ) : (
+                        <>
+                          {rankings.map((r, idx) => (
+                            <tr
+                              key={r.student_id}
+                              className={cn(
+                                "hover:bg-muted/30 transition-colors",
+                                idx === 0 && "bg-amber-100/70",
+                              )}
+                            >
+                              <td className="px-4 py-3 tabular-nums text-muted-foreground font-medium">
+                                {idx + 1}
+                              </td>
+                              <td className="px-4 py-3">
+                                <Link
+                                  href={`${studentLinkPrefix}/${r.student_id}`}
+                                  className="font-semibold text-foreground hover:underline"
+                                >
+                                  {r.first_name} {r.last_name}
+                                </Link>
+                                <p className="text-muted-foreground text-[11px]">
+                                  {r.grade ? `${r.grade} - ` : ""}
+                                  {r.student_number ?? "—"}
+                                </p>
+                              </td>
+                              {r.subjects.map((s) => (
+                                <Fragment
+                                  key={`${r.student_id}-${s.subject_name}`}
+                                >
+                                  <td className="text-center px-2 py-3 tabular-nums text-green-600 dark:text-green-400 border-l">
+                                    {s.correct}
+                                  </td>
+                                  <td className="text-center px-2 py-3 tabular-nums text-red-500">
+                                    {s.incorrect}
+                                  </td>
+                                  <td className="text-center px-2 py-3 tabular-nums text-muted-foreground">
+                                    {s.empty}
+                                  </td>
+                                  <td className="text-center px-2 py-3 tabular-nums font-medium">
+                                    {s.net.toFixed(2)}
+                                  </td>
+                                </Fragment>
+                              ))}
+                              <td className="text-center px-2 py-3 tabular-nums text-green-600 dark:text-green-400 border-l">
+                                {r.total_correct}
+                              </td>
+                              <td className="text-center px-2 py-3 tabular-nums text-red-500">
+                                {r.total_incorrect}
+                              </td>
+                              <td className="text-center px-2 py-3 tabular-nums text-muted-foreground">
+                                {r.total_empty}
+                              </td>
+                              <td className="text-center px-2 py-3 tabular-nums font-bold">
+                                {r.total_net.toFixed(2)}
+                              </td>
+                              <td className="text-center px-2 py-3 tabular-nums font-bold text-primary">
+                                {r.total_score.toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+
+                          {/* Sonuç girilmemiş öğrenciler */}
+                          {assigned.length > 0 && (
+                            <>
+                              <tr className="bg-muted/30">
+                                <td colSpan={totalCols} className="px-4 py-2">
+                                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+                                    Sonuç Girilmemiş ({assigned.length})
+                                  </span>
+                                </td>
+                              </tr>
+                              {assigned.map((s) => (
+                                <tr
+                                  key={s.student_id}
+                                  className="hover:bg-muted/20 transition-colors opacity-60"
+                                >
+                                  <td className="px-4 py-3 text-muted-foreground">
+                                    —
+                                  </td>
+                                  <td className="px-4 py-3">
+                                    <Link
+                                      href={`${studentLinkPrefix}/${s.student_id}`}
+                                      className="font-semibold text-foreground hover:underline"
+                                    >
+                                      {s.first_name} {s.last_name}
+                                    </Link>
+                                    <p className="text-muted-foreground text-[11px]">
+                                      {s.grade ? `${s.grade} - ` : ""}
+                                      {s.student_number ?? "—"}
+                                    </p>
+                                  </td>
+                                  <td
+                                    colSpan={totalCols - 2}
+                                    className="px-4 py-3 text-center text-muted-foreground text-[11px]"
+                                  >
+                                    Henüz sonuç girilmemiş
+                                  </td>
+                                </tr>
+                              ))}
+                            </>
+                          )}
+                        </>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -430,7 +470,7 @@ export function ExamsRankingsView({
           onOpenChange={(o) => !o && setDeleteId(null)}
         >
           <AlertDialogContent className="bg-popover ring-border">
-            <AlertDialogHeader>
+            <AlertDialogHeader className="bg-popover">
               <AlertDialogTitle className="text-lg font-semibold">
                 Sınavı sil
               </AlertDialogTitle>
@@ -445,7 +485,7 @@ export function ExamsRankingsView({
                 </span>
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
+            <AlertDialogFooter className="bg-popover">
               <AlertDialogCancel disabled={deleting} className="cursor-pointer">
                 Vazgeç
               </AlertDialogCancel>

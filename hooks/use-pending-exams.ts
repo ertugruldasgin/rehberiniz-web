@@ -35,7 +35,7 @@ export function usePendingExams() {
         .from("students")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (!student) throw new Error("Öğrenci kaydı bulunamadı.");
 
       // Atanan sınavları çek

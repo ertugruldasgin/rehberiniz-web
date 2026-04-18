@@ -11,7 +11,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/teachers": "Yönetim / Öğretmenler",
   "/dashboard/admin/students": "Yönetim / Öğrenciler",
   "/dashboard/admin/exams": "Yönetim / Sınavlar",
-  "/dashboard/admin/exam-templates": "Yönetim / Sınav Şablonları",
+  "/dashboard/admin/exam-templates": "Kurum / Sınav Şablonları",
   "/dashboard/admin/reports": "Kurum / Raporlar",
   "/dashboard/admin/settings": "Kurum / Ayarlar",
 
@@ -19,8 +19,8 @@ const pageTitles: Record<string, string> = {
   "/dashboard/teacher": "Genel / Panom",
   "/dashboard/teacher/students": "Öğrenciler / Öğrencilerim",
   "/dashboard/teacher/analytics": "Öğrenciler / Konu Analizi",
-  "/dashboard/teacher/exam-entry": "Sınavlar / Sonuç Girişi",
-  "/dashboard/teacher/exam-history": "Sınavlar / Sınav Geçmişi",
+  "/dashboard/teacher/exam-history": "Sınavlar / Sınavlar",
+  "/dashboard/teacher/exam-entry": "Sınavlar / Sonuç Yönetimi",
   "/dashboard/teacher/meeting-notes": "Rehberlik / Görüşme Notları",
   "/dashboard/teacher/reports": "Rehberlik / Raporlar",
 
