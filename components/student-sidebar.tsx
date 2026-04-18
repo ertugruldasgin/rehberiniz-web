@@ -39,9 +39,9 @@ export function StudentSidebar({
     });
 
   return (
-    <div className={cn("flex flex-col h-full bg-card", className)}>
+    <div className={cn("flex flex-col h-full bg-card rounded-2xl", className)}>
       {/* Arama */}
-      <div className="p-3 border-b bg-muted/80 shrink-0">
+      <div className="p-3 border-b bg-muted/80 shrink-0 rounded-t-2xl">
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input

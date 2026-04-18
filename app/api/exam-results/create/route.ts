@@ -14,7 +14,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Yetkisiz." }, { status: 401 });
 
     const body = await req.json();
-    const { title, date, template_id, subject_id, sections, exam_id } = body;
+    const {
+      title,
+      date,
+      template_id,
+      subject_id,
+      sections,
+      exam_id,
+      student_id,
+    } = body;
 
     if (!sections?.length)
       return NextResponse.json(
@@ -22,12 +30,41 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
 
-    // Öğrencinin kendi student kaydını bul
-    const { data: student } = await adminSupabase
-      .from("students")
-      .select("id, organization_id")
-      .eq("user_id", user.id)
-      .single();
+    let student: { id: string; organization_id: string } | null = null;
+
+    if (student_id) {
+      const { data: member } = await adminSupabase
+        .from("organization_members")
+        .select("organization_id, role")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!member || (member.role !== "teacher" && member.role !== "admin")) {
+        return NextResponse.json({ error: "Yetkisiz." }, { status: 403 });
+      }
+
+      const { data } = await adminSupabase
+        .from("students")
+        .select("id, organization_id")
+        .eq("id", student_id)
+        .single();
+
+      if (!data || data.organization_id !== member.organization_id) {
+        return NextResponse.json(
+          { error: "Geçersiz öğrenci." },
+          { status: 400 },
+        );
+      }
+
+      student = data;
+    } else {
+      const { data } = await adminSupabase
+        .from("students")
+        .select("id, organization_id")
+        .eq("user_id", user.id)
+        .single();
+      student = data;
+    }
 
     if (!student)
       return NextResponse.json(
@@ -38,10 +75,8 @@ export async function POST(req: NextRequest) {
     let finalExamId: string;
 
     if (exam_id) {
-      // Kurum sınavı — mevcut exam'i kullan
       finalExamId = exam_id;
     } else {
-      // Bireysel deneme — yeni exam oluştur
       if (!title || !date)
         return NextResponse.json(
           { error: "Zorunlu alanlar eksik." },
@@ -71,7 +106,6 @@ export async function POST(req: NextRequest) {
       finalExamId = exam.id;
     }
 
-    // Toplam hesapla
     const total_correct = sections.reduce(
       (s: number, r: any) => s + (r.correct || 0),
       0,
@@ -89,7 +123,6 @@ export async function POST(req: NextRequest) {
       0,
     );
 
-    // exam_results oluştur
     const { data: examResult, error: resultError } = await adminSupabase
       .from("exam_results")
       .insert({
@@ -104,28 +137,30 @@ export async function POST(req: NextRequest) {
       .single();
     if (resultError) throw resultError;
 
-    // subject_results ekle
-    const slugs = sections.map((s: any) => s.key);
-    const { data: subjects } = await adminSupabase
-      .from("subjects")
-      .select("id, slug")
-      .in("slug", slugs);
+    // subjects tablosundan slug -> id eşlemesi (genel/branş için)
+    const slugs = sections.map((s: any) => s.key).filter(Boolean);
+    const { data: subjectRows } =
+      slugs.length > 0
+        ? await adminSupabase
+            .from("subjects")
+            .select("id, slug")
+            .in("slug", slugs)
+        : { data: [] };
 
     const subjectMap = Object.fromEntries(
-      (subjects ?? []).map((s) => [s.slug, s.id]),
+      (subjectRows ?? []).map((s) => [s.slug, s.id]),
     );
 
-    const subjectResults = sections
-      .map((s: any) => ({
-        exam_result_id: examResult.id,
-        subject_id: subjectMap[s.key],
-        is_standalone: !exam_id && !!subject_id,
-        correct: s.correct || 0,
-        incorrect: s.incorrect || 0,
-        empty: s.empty || 0,
-        net: s.net || 0,
-      }))
-      .filter((s: any) => s.subject_id);
+    const subjectResults = sections.map((s: any) => ({
+      exam_result_id: examResult.id,
+      subject_id: subjectMap[s.key] ?? null,
+      section_label: s.label,
+      is_standalone: !exam_id && !!subject_id,
+      correct: s.correct || 0,
+      incorrect: s.incorrect || 0,
+      empty: s.empty || 0,
+      net: s.net || 0,
+    }));
 
     if (subjectResults.length > 0) {
       const { error: subjectError } = await adminSupabase

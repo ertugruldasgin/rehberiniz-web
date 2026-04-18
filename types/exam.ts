@@ -1,4 +1,5 @@
 export interface SubjectResult {
+  subject_id: string;
   subject_name: string;
   correct: number;
   incorrect: number;

@@ -67,29 +67,45 @@ interface ExamResultsTableProps {
   results: ExamResult[];
   type: "general" | "branch";
   className?: string;
+  onRowClick?: (result: ExamResult) => void;
 }
 
 export function ExamResultsTable({
   results,
   type,
   className,
+  onRowClick,
 }: ExamResultsTableProps) {
   if (results.length === 0) return null;
 
-  if (type === "branch")
-    return <BranchResultsTable results={results} className={className} />;
-  return <GeneralResultsTable results={results} className={className} />;
+  //const effectiveType = results[0]?.subjects?.length === 1 ? "branch" : type;
+  const effectiveType = results[0]?.is_standalone ? "branch" : type;
+
+  if (effectiveType === "branch")
+    return (
+      <BranchResultsTable
+        results={results}
+        className={className}
+        onRowClick={onRowClick}
+      />
+    );
+  return (
+    <GeneralResultsTable
+      results={results}
+      className={className}
+      onRowClick={onRowClick}
+    />
+  );
 }
 
-// ——————————————————————————————————————————————
-// Genel Deneme Tablosu
-// ——————————————————————————————————————————————
 function GeneralResultsTable({
   results,
   className,
+  onRowClick,
 }: {
   results: ExamResult[];
   className?: string;
+  onRowClick?: (result: ExamResult) => void;
 }) {
   const { containerRef, isCompact } = useCompactMode();
   const subjects = results[0].subjects.map((s) => s.subject_name);
@@ -129,7 +145,15 @@ function GeneralResultsTable({
         </TableHeader>
         <TableBody className="bg-card">
           {results.map((result) => (
-            <TableRow key={result.id} className="border-border">
+            <TableRow
+              key={result.id}
+              className={cn(
+                "border-border",
+                onRowClick &&
+                  "cursor-pointer hover:bg-muted/40 transition-colors",
+              )}
+              onClick={() => onRowClick?.(result)}
+            >
               <TableCell className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm leading-tight truncate">
@@ -179,15 +203,14 @@ function GeneralResultsTable({
   );
 }
 
-// ——————————————————————————————————————————————
-// Branş Denemesi Tablosu
-// ——————————————————————————————————————————————
 function BranchResultsTable({
   results,
   className,
+  onRowClick,
 }: {
   results: ExamResult[];
   className?: string;
+  onRowClick?: (result: ExamResult) => void;
 }) {
   return (
     <div className={cn("rounded-lg overflow-hidden", className)}>
@@ -211,7 +234,15 @@ function BranchResultsTable({
         </TableHeader>
         <TableBody className="bg-card">
           {results.map((result) => (
-            <TableRow key={result.id} className="border-border">
+            <TableRow
+              key={result.id}
+              className={cn(
+                "border-border",
+                onRowClick &&
+                  "cursor-pointer hover:bg-muted/40 transition-colors",
+              )}
+              onClick={() => onRowClick?.(result)}
+            >
               <TableCell className="w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm leading-tight truncate">
@@ -242,9 +273,6 @@ function BranchResultsTable({
   );
 }
 
-// ——————————————————————————————————————————————
-// Sub-header: D / Y / B / Net
-// ——————————————————————————————————————————————
 function SubHeaders() {
   return (
     <>
@@ -264,9 +292,6 @@ function SubHeaders() {
   );
 }
 
-// ——————————————————————————————————————————————
-// Ders hücreleri: D / Y / B / Net
-// ——————————————————————————————————————————————
 function SubjectCells({
   correct,
   incorrect,

@@ -43,6 +43,7 @@ interface AddExamResultDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  studentId: string;
 }
 
 interface SelectFieldProps {
@@ -135,6 +136,7 @@ export function AddExamResultDialog({
   open,
   onOpenChange,
   onSuccess,
+  studentId,
 }: AddExamResultDialogProps) {
   const { templates, loading: templatesLoading } = useExamTemplates();
   const generalTemplates = templates.filter((t) => !t.organization_id);
@@ -251,10 +253,14 @@ export function AddExamResultDialog({
         body: JSON.stringify({
           title,
           date,
-          template_id: examType === "general" ? selectedTemplateId : null,
+          template_id:
+            examType === "general" || examType === "custom"
+              ? selectedTemplateId
+              : null,
           subject_id: examType === "branch" ? selectedSubjectId : null,
           is_standalone: true,
           sections,
+          ...(studentId ? { student_id: studentId } : {}),
         }),
       });
 
@@ -310,9 +316,9 @@ export function AddExamResultDialog({
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
                   {(
                     [
-                      { key: "general", label: "Genel Deneme" },
-                      { key: "custom", label: "Kurum Denemesi" },
-                      { key: "branch", label: "Branş Denemesi" },
+                      { key: "general", label: "Genel" },
+                      { key: "custom", label: "Kurum" },
+                      { key: "branch", label: "Branş" },
                     ] as { key: ExamType; label: string }[]
                   ).map((type) => (
                     <button

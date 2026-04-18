@@ -31,11 +31,13 @@ async function fetchResults(
       )
     ),
     subject_results (
+      id,
       correct,
       incorrect,
       empty,
       net,
       is_standalone,
+      section_label,
       subjects (
         name
       )
@@ -54,7 +56,9 @@ async function fetchResults(
     const firstSubjectResult = r.subject_results?.[0];
 
     const category = isBranch
-      ? (firstSubjectResult?.subjects?.name ?? "Diğer")
+      ? (firstSubjectResult?.subjects?.name ??
+        firstSubjectResult?.section_label ??
+        "Diğer")
       : (exam?.exam_templates?.name ?? exam?.title ?? "Diğer");
 
     return {
@@ -69,7 +73,8 @@ async function fetchResults(
       total_empty: r.total_empty,
       total_net: r.total_net,
       subjects: (r.subject_results ?? []).map((s: any) => ({
-        subject_name: s.subjects?.name ?? "—",
+        subject_id: s.id,
+        subject_name: s.subjects?.name ?? s.section_label ?? "—",
         correct: s.correct,
         incorrect: s.incorrect,
         empty: s.empty,
