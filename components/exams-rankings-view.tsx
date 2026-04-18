@@ -351,7 +351,6 @@ export function ExamsRankingsView({
                               key={r.student_id}
                               className={cn(
                                 "hover:bg-muted/30 transition-colors",
-                                idx === 0 && "bg-amber-100/70",
                               )}
                             >
                               <td className="px-4 py-3 tabular-nums text-muted-foreground font-medium">

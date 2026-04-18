@@ -13,6 +13,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useUserRole } from "@/hooks/use-user-role";
 
 interface DeleteStudentDialogProps {
   open: boolean;
@@ -29,6 +30,7 @@ export function DeleteStudentDialog({
 }: DeleteStudentDialogProps) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { userData } = useUserRole();
 
   async function handleDelete() {
     setLoading(true);
@@ -44,7 +46,11 @@ export function DeleteStudentDialog({
 
       toast.success("Öğrenci silindi.");
       onOpenChange(false);
-      router.push("/dashboard/teacher/students");
+      router.push(
+        userData?.role === "admin"
+          ? "/dashboard/admin/students"
+          : "/dashboard/teacher/students",
+      );
     } catch (err: any) {
       toast.error(err.message);
     } finally {
