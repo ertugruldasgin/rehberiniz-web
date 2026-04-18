@@ -43,7 +43,7 @@ interface AddExamResultDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  studentId: string;
+  studentId?: string;
 }
 
 interface SelectFieldProps {
