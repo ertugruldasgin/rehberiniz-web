@@ -276,11 +276,16 @@ export default function SettingsPage() {
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <MailIcon className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="flex flex-col min-w-0">
                     <p className="text-[11px] text-muted-foreground">E-posta</p>
-                    <p className="text-xs font-medium truncate">
+                    <a
+                      href={`mailto:${organization.email}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="leading-none text-xs font-medium truncate hover:underline"
+                    >
                       {organization.email}
-                    </p>
+                    </a>
                   </div>
                 </div>
               )}
@@ -289,13 +294,18 @@ export default function SettingsPage() {
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
                     <GlobeIcon className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="flex flex-col min-w-0">
                     <p className="text-[11px] text-muted-foreground">
                       Web Sitesi
                     </p>
-                    <p className="text-xs font-medium truncate">
+                    <a
+                      href={organization.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="leading-none text-xs font-medium truncate hover:underline"
+                    >
                       {organization.website}
-                    </p>
+                    </a>
                   </div>
                 </div>
               )}

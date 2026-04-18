@@ -3,10 +3,16 @@
 import { PageHeader } from "@/components/page-header";
 import { useMeetingNotes } from "@/hooks/use-meeting-notes";
 import { Input } from "@/components/ui/input";
-import { BookOpenIcon, LockIcon, LockOpenIcon, SearchIcon } from "lucide-react";
+import {
+  FileQuestionMark,
+  LockIcon,
+  LockOpenIcon,
+  SearchIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Link from "next/link";
 
 const STUDENT_COLORS = [
   {
@@ -123,7 +129,7 @@ export default function MeetingNotesPage() {
         </div>
       ) : Object.keys(grouped).length === 0 ? (
         <div className="p-12 flex flex-col items-center gap-3 text-center">
-          <BookOpenIcon className="h-8 w-8 text-muted-foreground/30" />
+          <FileQuestionMark className="h-8 w-8 text-muted-foreground/30" />
           <p className="text-sm font-medium text-muted-foreground/60">
             Arama sonucu bulunamadı.
           </p>
@@ -162,7 +168,12 @@ export default function MeetingNotesPage() {
                           .toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <p className="text-sm font-semibold">{studentName}</p>
+                    <Link
+                      href={`/dashboard/teacher/students/${studentId}`}
+                      className="text-sm font-semibold hover:underline"
+                    >
+                      {studentName}
+                    </Link>
                     <span className="text-xs text-muted-foreground px-1.5 py-0.5 rounded-full bg-muted">
                       {studentNotes.length}
                     </span>

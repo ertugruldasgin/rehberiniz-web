@@ -28,7 +28,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/student": "Genel / Özet",
   "/dashboard/student/exam-results": "Performans / Sınav Sonuçlarım",
   "/dashboard/student/my-progress": "Performans / Gelişim Grafiğim",
-  "/dashboard/student/notes": "Rehberlik / Notlarım",
+  "/dashboard/student/notes": "Rehberlik / Rehberlik Notlarım",
   "/dashboard/student/goals": "Rehberlik / Hedeflerim",
 
   // Genel

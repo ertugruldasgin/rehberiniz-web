@@ -156,7 +156,7 @@ export function getNavItems(role: UserRole) {
         group: "Rehberlik",
         items: [
           {
-            title: "Notlarım",
+            title: "Rehberlik Notlarım",
             url: "/dashboard/student/notes",
             icon: <Notebook />,
           },

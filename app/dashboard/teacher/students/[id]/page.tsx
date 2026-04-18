@@ -22,6 +22,7 @@ import {
   PlusIcon,
   LockIcon,
   LockOpenIcon,
+  LibraryBig,
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -552,13 +553,18 @@ export default function StudentDetailPage() {
               </div>
               {Object.keys(grouped).length === 0 ? (
                 <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
-                  {examSearch
-                    ? "Arama sonucu bulunamadı."
-                    : examView === "general"
-                      ? "Henüz genel deneme sonucu bulunmuyor."
-                      : examView === "branch"
-                        ? "Henüz branş denemesi sonucu bulunmuyor."
-                        : "Henüz kurum sınavı sonucu bulunmuyor."}
+                  <div className="p-10 flex flex-col items-center gap-2 text-center">
+                    <LibraryBig className="h-7 w-7 text-muted-foreground/30" />
+                    <div>
+                      {examSearch
+                        ? "Arama sonucu bulunamadı."
+                        : examView === "general"
+                          ? "Henüz genel deneme sonucu bulunmuyor."
+                          : examView === "branch"
+                            ? "Henüz branş denemesi sonucu bulunmuyor."
+                            : "Henüz kurum sınavı sonucu bulunmuyor."}
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -601,7 +607,7 @@ export default function StudentDetailPage() {
                 ))}
               </div>
             ) : notes.length === 0 ? (
-              <div className="p-10 flex flex-col items-center gap-2 text-center border border-dashed rounded-2xl">
+              <div className="p-10 flex flex-col items-center gap-2 text-center">
                 <BookOpenIcon className="h-7 w-7 text-muted-foreground/30" />
                 <p className="text-sm font-medium text-muted-foreground/60">
                   Henüz rehberlik notu bulunmuyor
