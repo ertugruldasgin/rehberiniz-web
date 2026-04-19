@@ -19,6 +19,7 @@ import {
   YAxis,
   CartesianGrid,
   Cell,
+  ReferenceLine,
 } from "recharts";
 import {
   TrendingUpIcon,
@@ -35,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useStudentGoals } from "@/hooks/use-student-goals";
 
 type TimeFilter = "week" | "month" | "all";
 type ChartType = "line" | "bar";
@@ -76,6 +78,7 @@ function SubjectChart({
   points,
   maxPossibleNet,
   chartType,
+  targetNet,
 }: {
   subject_name: string;
   points: {
@@ -88,6 +91,7 @@ function SubjectChart({
   }[];
   maxPossibleNet: number;
   chartType: ChartType;
+  targetNet?: number;
 }) {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
 
@@ -217,6 +221,20 @@ function SubjectChart({
                     />
                   }
                 />
+                {targetNet && targetNet > 0 && (
+                  <ReferenceLine
+                    y={targetNet}
+                    stroke="oklch(0.627 0.194 149.21)"
+                    strokeDasharray="5 4"
+                    strokeWidth={1.5}
+                    label={{
+                      value: `Hedef: ${targetNet}`,
+                      position: "insideTopRight",
+                      fontSize: 10,
+                      fill: "oklch(0.627 0.194 149.21)",
+                    }}
+                  />
+                )}
                 <Line
                   type="monotone"
                   dataKey="net"
@@ -262,6 +280,20 @@ function SubjectChart({
                     />
                   }
                 />
+                {targetNet && targetNet > 0 && (
+                  <ReferenceLine
+                    y={targetNet}
+                    stroke="oklch(0.627 0.194 149.21)"
+                    strokeDasharray="5 4"
+                    strokeWidth={1.5}
+                    label={{
+                      value: `Hedef: ${targetNet}`,
+                      position: "insideTopRight",
+                      fontSize: 10,
+                      fill: "oklch(0.627 0.194 149.21)",
+                    }}
+                  />
+                )}
                 <Bar dataKey="net" radius={[4, 4, 0, 0]} maxBarSize={48}>
                   {chartData.map((entry, index) => {
                     const prev = chartData[index - 1]?.net ?? entry.net;
@@ -300,6 +332,7 @@ export function ProgressView({ studentId }: ProgressViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [chartType, setChartType] = useState<ChartType>("line");
 
+  const { goals: studentGoals } = useStudentGoals(studentId);
   const { results } = useExamResults(studentId);
   const { data, loading } = useProgressData(studentId, viewType, showOfficial);
   const { subjects } = useSubjects();
@@ -488,6 +521,9 @@ export function ProgressView({ studentId }: ProgressViewProps) {
                   const subjectDef = subjects.find(
                     (s) => s.id === subject.subject_id,
                   );
+                  const goalForSubject = studentGoals.find(
+                    (g) => g.subject_id === subject.subject_id,
+                  );
                   return (
                     <SubjectChart
                       key={subject.subject_id}
@@ -495,6 +531,7 @@ export function ProgressView({ studentId }: ProgressViewProps) {
                       points={subject.points}
                       maxPossibleNet={subjectDef?.default_questions ?? 40}
                       chartType={chartType}
+                      targetNet={goalForSubject?.target_net}
                     />
                   );
                 })}
