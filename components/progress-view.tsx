@@ -10,12 +10,23 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Cell,
+} from "recharts";
 import {
   TrendingUpIcon,
   TrendingDownIcon,
   MinusIcon,
   CheckIcon,
+  BarChart2Icon,
+  TrendingUpIcon as LineChartIcon,
 } from "lucide-react";
 import {
   Select,
@@ -26,6 +37,7 @@ import {
 } from "@/components/ui/select";
 
 type TimeFilter = "week" | "month" | "all";
+type ChartType = "line" | "bar";
 
 const TIME_FILTERS: { label: string; value: TimeFilter }[] = [
   { label: "1H", value: "week" },
@@ -63,6 +75,7 @@ function SubjectChart({
   subject_name,
   points,
   maxPossibleNet,
+  chartType,
 }: {
   subject_name: string;
   points: {
@@ -74,6 +87,7 @@ function SubjectChart({
     empty: number;
   }[];
   maxPossibleNet: number;
+  chartType: ChartType;
 }) {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("all");
 
@@ -166,50 +180,109 @@ function SubjectChart({
             config={{ net: { label: "Net" } }}
             className="h-36 sm:h-40 md:h-44 lg:h-48 xl:h-52 w-full"
           >
-            <LineChart
-              data={chartData}
-              margin={{ top: 12, right: 12, left: -20, bottom: 0 }}
-            >
-              <CartesianGrid
-                horizontal={true}
-                vertical={false}
-                stroke="#000000"
-                strokeDasharray="4 4"
-                strokeOpacity={0.1}
-              />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 10 }}
-                tickLine={true}
-                axisLine={true}
-                tickFormatter={(_, idx) =>
-                  formatDate(filtered[idx]?.date ?? "")
-                }
-              />
-              <YAxis
-                domain={[0, maxPossibleNet]}
-                tick={{ fontSize: 10 }}
-                tickLine={true}
-                axisLine={false}
-              />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(_, payload) =>
-                      payload?.[0]?.payload?.fullLabel ?? ""
-                    }
-                    formatter={(value) => [`${Number(value).toFixed(2)} Net`]}
-                  />
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="net"
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-              />
-            </LineChart>
+            {chartType === "line" ? (
+              <LineChart
+                data={chartData}
+                margin={{ top: 12, right: 12, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  horizontal={true}
+                  vertical={false}
+                  stroke="#000000"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.1}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10 }}
+                  tickLine={true}
+                  axisLine={true}
+                  tickFormatter={(_, idx) =>
+                    formatDate(filtered[idx]?.date ?? "")
+                  }
+                />
+                <YAxis
+                  domain={[0, maxPossibleNet]}
+                  tick={{ fontSize: 10 }}
+                  tickLine={true}
+                  axisLine={false}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(_, payload) =>
+                        payload?.[0]?.payload?.fullLabel ?? ""
+                      }
+                      formatter={(value) => [`${Number(value).toFixed(2)} Net`]}
+                    />
+                  }
+                />
+                <Line
+                  type="monotone"
+                  dataKey="net"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                />
+              </LineChart>
+            ) : (
+              <BarChart
+                data={chartData}
+                margin={{ top: 12, right: 12, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  horizontal={true}
+                  vertical={false}
+                  stroke="#000000"
+                  strokeDasharray="4 4"
+                  strokeOpacity={0.1}
+                />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 10 }}
+                  tickLine={true}
+                  axisLine={true}
+                  tickFormatter={(_, idx) =>
+                    formatDate(filtered[idx]?.date ?? "")
+                  }
+                />
+                <YAxis
+                  domain={[0, maxPossibleNet]}
+                  tick={{ fontSize: 10 }}
+                  tickLine={true}
+                  axisLine={false}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(_, payload) =>
+                        payload?.[0]?.payload?.fullLabel ?? ""
+                      }
+                      formatter={(value) => [`${Number(value).toFixed(2)} Net`]}
+                    />
+                  }
+                />
+                <Bar dataKey="net" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                  {chartData.map((entry, index) => {
+                    const prev = chartData[index - 1]?.net ?? entry.net;
+                    const isUp = entry.net >= prev;
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          index === 0
+                            ? "hsl(var(--primary))"
+                            : isUp
+                              ? "oklch(0.627 0.194 149.21)"
+                              : "oklch(0.628 0.224 22.22)"
+                        }
+                        fillOpacity={0.85}
+                      />
+                    );
+                  })}
+                </Bar>
+              </BarChart>
+            )}
           </ChartContainer>
         )}
       </div>
@@ -225,12 +298,12 @@ export function ProgressView({ studentId }: ProgressViewProps) {
   const [viewType, setViewType] = useState<ViewType>("general");
   const [showOfficial, setShowOfficial] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [chartType, setChartType] = useState<ChartType>("line");
 
   const { results } = useExamResults(studentId);
   const { data, loading } = useProgressData(studentId, viewType, showOfficial);
   const { subjects } = useSubjects();
 
-  // Her view için sonuç sayıları
   const generalCount = results.filter(
     (r) => !r.is_standalone && (showOfficial || !r.is_official),
   ).length;
@@ -250,7 +323,6 @@ export function ProgressView({ studentId }: ProgressViewProps) {
     ? data.filter((d) => d.category === selectedCategory)
     : data;
 
-  // View değişince kategori sıfırla
   function handleViewChange(v: ViewType) {
     setViewType(v);
     setSelectedCategory(null);
@@ -291,7 +363,7 @@ export function ProgressView({ studentId }: ProgressViewProps) {
           ))}
         </div>
 
-        {/* Kurum sınavları toggle — official view'da gizle */}
+        {/* Kurum sınavları toggle */}
         {viewType !== "official" && (
           <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
             <button
@@ -320,6 +392,36 @@ export function ProgressView({ studentId }: ProgressViewProps) {
             </button>
           </div>
         )}
+
+        {/* Grafik tipi toggle */}
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-muted">
+          <button
+            type="button"
+            onClick={() => setChartType("line")}
+            className={cn(
+              "px-2.5 py-1.5 rounded-md text-sm font-medium transition-all cursor-pointer flex items-center gap-1.5",
+              chartType === "line"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <LineChartIcon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Çizgi</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChartType("bar")}
+            className={cn(
+              "px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1.5",
+              chartType === "bar"
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <BarChart2Icon className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Bar</span>
+          </button>
+        </div>
 
         {/* Kategori dropdown */}
         {!loading && categories.length > 1 && (
@@ -392,6 +494,7 @@ export function ProgressView({ studentId }: ProgressViewProps) {
                       subject_name={subject.subject_name}
                       points={subject.points}
                       maxPossibleNet={subjectDef?.default_questions ?? 40}
+                      chartType={chartType}
                     />
                   );
                 })}
