@@ -47,8 +47,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { StudentGoalsView } from "@/components/student-goals-view";
 
-type Tab = "general" | "exams" | "notes";
+type Tab = "general" | "exams" | "notes" | "goals";
 type ExamView = "general" | "branch" | "official";
 
 function groupByCategory<T extends { category: string }>(
@@ -429,6 +430,12 @@ export default function StudentDetailPage() {
               Rehberlik Notları
             </TabButton>
           )}
+          <TabButton
+            active={activeTab === "goals"}
+            onClick={() => setActiveTab("goals")}
+          >
+            Hedefler
+          </TabButton>
         </div>
 
         {/* Genel Bilgiler */}
@@ -722,6 +729,9 @@ export default function StudentDetailPage() {
               </div>
             )}
           </div>
+        )}
+        {activeTab === "goals" && (
+          <StudentGoalsView studentId={student.id} canEdit={true} />
         )}
       </div>
 

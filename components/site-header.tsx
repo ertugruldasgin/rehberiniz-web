@@ -18,7 +18,7 @@ const pageTitles: Record<string, string> = {
   // Teacher
   "/dashboard/teacher": "Genel / Panom",
   "/dashboard/teacher/students": "Öğrenciler / Öğrencilerim",
-  "/dashboard/teacher/analytics": "Öğrenciler / Konu Analizi",
+  "/dashboard/teacher/progresses": "Öğrenciler / Gelişim Grafikleri",
   "/dashboard/teacher/exam-history": "Sınavlar / Sınavlar",
   "/dashboard/teacher/exam-entry": "Sınavlar / Sonuç Yönetimi",
   "/dashboard/teacher/meeting-notes": "Rehberlik / Görüşme Notları",

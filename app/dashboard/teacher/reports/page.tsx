@@ -6,7 +6,7 @@ const Reports = () => {
     <div className="flex flex-col px-4 md:px-6 space-y-6">
       <PageHeader
         title="Raporlar"
-        description="Öğrencilerinizin sınav sonuçlarını raporlayın."
+        description="Öğrencilerinizin raporlarını oluşturun."
       />
     </div>
   );

@@ -106,7 +106,7 @@ export function ExamsRankingsView({
         {/* Sol sidebar */}
         <div
           className={cn(
-            "shrink-0 w-full md:w-72 rounded-2xl overflow-hidden border bg-card flex flex-col",
+            "shrink-0 w-full md:w-72 rounded-2xl overflow-hidden bg-card flex flex-col",
             selectedExam ? "hidden md:flex" : "flex",
           )}
         >
@@ -198,13 +198,13 @@ export function ExamsRankingsView({
         {/* Sağ — sonuç tablosu */}
         <div
           className={cn(
-            "flex-1 min-w-0 overflow-auto rounded-2xl border bg-card",
+            "flex-1 min-w-0 overflow-auto rounded-2xl bg-card",
             !selectedExam ? "hidden md:block" : "block",
           )}
         >
           {!selectedExam ? (
             <div className="h-full flex flex-col items-center justify-center gap-3 text-center p-6">
-              <div className="h-12 w-12 rounded-2xl bg-muted flex items-center justify-center">
+              <div className="h-12 w-12 rounded-2xl flex items-center justify-center">
                 <ClipboardListIcon className="h-6 w-6 text-muted-foreground/50" />
               </div>
               <p className="text-sm font-medium text-muted-foreground">

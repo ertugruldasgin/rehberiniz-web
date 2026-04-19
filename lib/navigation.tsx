@@ -89,9 +89,9 @@ export function getNavItems(role: UserRole) {
             icon: <UsersIcon />,
           },
           {
-            title: "Konu Analizi",
-            url: "/dashboard/teacher/analytics",
-            icon: <ClipboardListIcon />,
+            title: "Gelişim Grafikleri",
+            url: "/dashboard/teacher/progresses",
+            icon: <ChartSpline />,
           },
         ],
       },

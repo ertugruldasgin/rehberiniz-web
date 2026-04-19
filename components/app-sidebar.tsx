@@ -18,6 +18,39 @@ import { getNavItems } from "@/lib/navigation";
 import { useUserRole } from "@/hooks/use-user-role";
 import { tr } from "date-fns/locale";
 
+function LiveClock({ timeZone }: { timeZone?: string }) {
+  const [now, setNow] = React.useState<Date | null>(null);
+
+  React.useEffect(() => {
+    setNow(new Date());
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!now) return null;
+
+  const time = now.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone,
+  });
+
+  const date = now.toLocaleDateString("tr-TR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone,
+  });
+
+  return (
+    <div className="px-3 py-3 border border-sidebar-border rounded-lg bg-sidebar text-center space-y-0.5">
+      <p className="text-2xl font-bold tabular-nums tracking-tight">{time}</p>
+      <p className="text-xs text-muted-foreground capitalize">{date}</p>
+    </div>
+  );
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, loading } = useUserRole();
   const [date, setDate] = React.useState<Date | undefined>(undefined);
@@ -72,7 +105,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="px-2 pb-2">
+        <div className="px-2 pb-2 space-y-2">
+          <LiveClock timeZone={timeZone} />
           <Calendar
             mode="single"
             selected={date}
