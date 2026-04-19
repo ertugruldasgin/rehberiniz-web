@@ -117,7 +117,7 @@ function GeneralResultsTable({
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
-            <TableHead className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
+            <TableHead className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
               Deneme Adı
             </TableHead>
             {subjects.map((subject) => (
@@ -135,7 +135,7 @@ function GeneralResultsTable({
           </TableRow>
           {!isCompact && (
             <TableRow className="border-border bg-muted/20">
-              <TableHead className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]" />
+              <TableHead className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]" />
               {subjects.map((name) => (
                 <SubHeaders key={`sub-${name}`} />
               ))}
@@ -154,7 +154,7 @@ function GeneralResultsTable({
               )}
               onClick={() => onRowClick?.(result)}
             >
-              <TableCell className="sticky left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
+              <TableCell className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
