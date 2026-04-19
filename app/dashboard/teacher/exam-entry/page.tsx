@@ -86,13 +86,13 @@ export default function ExamEntryPage() {
   }
 
   return (
-    <div className="flex flex-col px-4 md:px-6 gap-4">
+    <div className="flex flex-col px-4 md:px-6 gap-4 h-full">
       <PageHeader
         title="Sonuç Yönetimi"
         description="Öğrencilerinizin sınav sonuçlarını görüntüleyin ve yönetin."
       />
 
-      <div className="flex gap-6" style={{ height: "calc(100vh - 12rem)" }}>
+      <div className="flex gap-6 flex-1 min-h-0">
         {/* Sol sidebar — sadece md+ */}
         <div className="hidden md:block shrink-0 w-64 overflow-hidden">
           <StudentSidebar

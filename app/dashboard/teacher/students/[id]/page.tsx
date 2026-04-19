@@ -48,8 +48,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { StudentGoalsView } from "@/components/student-goals-view";
+import { ProgressView } from "@/components/progress-view";
 
-type Tab = "general" | "exams" | "notes" | "goals";
+type Tab = "general" | "exams" | "progress" | "notes" | "goals";
 type ExamView = "general" | "branch" | "official";
 
 function groupByCategory<T extends { category: string }>(
@@ -409,7 +410,7 @@ export default function StudentDetailPage() {
 
       {/* İçerik */}
       <div className="space-y-4">
-        <div className="flex items-center gap-1 border-b">
+        <div className="flex items-center gap-1 border-b overflow-y-hidden overflow-x-auto scrollbar-hide">
           <TabButton
             active={activeTab === "general"}
             onClick={() => setActiveTab("general")}
@@ -421,6 +422,12 @@ export default function StudentDetailPage() {
             onClick={() => setActiveTab("exams")}
           >
             Sınav Sonuçları
+          </TabButton>
+          <TabButton
+            active={activeTab === "progress"}
+            onClick={() => setActiveTab("progress")}
+          >
+            İlerleme
           </TabButton>
           {userData?.role === "teacher" && (
             <TabButton
@@ -588,6 +595,9 @@ export default function StudentDetailPage() {
               )}
             </div>
           ))}
+
+        {/* İlerleme Sekmesi */}
+        {activeTab === "progress" && <ProgressView studentId={id} />}
 
         {/* Rehberlik Notları Sekmesi */}
         {activeTab === "notes" && (
@@ -802,7 +812,7 @@ function TabButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "px-4 py-2.5 text-sm font-medium -mb-px flex items-center gap-1.5 transition-colors",
+        "px-3 py-2 text-xs sm:text-sm font-medium -mb-px flex items-center gap-1 sm:gap-1.5 transition-colors whitespace-nowrap shrink-0",
         active && "text-primary border-b-2 border-primary cursor-pointer",
         !active &&
           !disabled &&

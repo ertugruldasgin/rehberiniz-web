@@ -40,6 +40,7 @@ async function fetchResults(
       is_standalone,
       section_label,
       subjects (
+        id,
         name
       )
     )
@@ -75,7 +76,7 @@ async function fetchResults(
       total_net: r.total_net,
       total_score: r.total_score,
       subjects: (r.subject_results ?? []).map((s: any) => ({
-        subject_id: s.id,
+        subject_id: s.subjects?.id ?? s.id,
         subject_name: s.subjects?.name ?? s.section_label ?? "—",
         correct: s.correct,
         incorrect: s.incorrect,

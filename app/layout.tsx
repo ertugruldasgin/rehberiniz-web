@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className="bg-sidebar">
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased scrollbar-hide">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>
