@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter>
-        <div className="px-2 pb-2 space-y-2">
+        <div className="px-2 pb-2 space-y-2 hidden sm:block">
           <LiveClock timeZone={timeZone} />
           <Calendar
             mode="single"
