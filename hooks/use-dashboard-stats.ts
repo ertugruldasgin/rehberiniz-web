@@ -6,6 +6,7 @@ export interface DashboardStats {
   inactiveStudents: number;
   categoryAverages: Record<string, number>;
   monthlyCategoryAverages: Record<string, number>;
+  categoryTrends: Record<string, { date: string; avg: number }[]>;
   topStudent: { name: string; net: number } | null;
   mostImproved: { name: string; diff: number } | null;
   totalTeachers: number;
@@ -25,6 +26,13 @@ const VALID_CATEGORIES = new Set([
   "LGS",
   "YDT",
 ]);
+
+function getWeekKey(date: Date): string {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Pazartesi
+  return d.toISOString().split("T")[0];
+}
 
 export function useDashboardStats() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -83,6 +91,7 @@ export function useDashboardStats() {
         inactiveStudents,
         categoryAverages: {},
         monthlyCategoryAverages: {},
+        categoryTrends: {},
         topStudent: null,
         mostImproved: null,
         totalTeachers,
@@ -229,6 +238,36 @@ export function useDashboardStats() {
           100;
       }
 
+      // Category bazlı aylık trend
+      const categoryTrendMap = new Map<string, Map<string, number[]>>();
+      for (const r of officialResults as any[]) {
+        const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+        const category =
+          exam?.exam_templates?.category ?? exam?.subjects?.category ?? null;
+        if (!category || !VALID_CATEGORIES.has(category)) continue;
+
+        const weekKey = getWeekKey(new Date(r.created_at)); // monthKey → weekKey
+        if (!categoryTrendMap.has(category))
+          categoryTrendMap.set(category, new Map());
+        const trendMap = categoryTrendMap.get(category)!;
+        if (!trendMap.has(weekKey)) trendMap.set(weekKey, []);
+        trendMap.get(weekKey)!.push(r.total_net);
+      }
+
+      const categoryTrends: Record<string, { date: string; avg: number }[]> =
+        {};
+      for (const [cat, trendMap] of categoryTrendMap.entries()) {
+        categoryTrends[cat] = Array.from(trendMap.entries())
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([date, nets]) => ({
+            date,
+            avg:
+              Math.round(
+                (nets.reduce((s, n) => s + n, 0) / nets.length) * 100,
+              ) / 100,
+          }));
+      }
+
       // Öğrenci bazında sonuçları grupla
       const studentMap = new Map<
         string,
@@ -273,6 +312,7 @@ export function useDashboardStats() {
         inactiveStudents,
         categoryAverages,
         monthlyCategoryAverages,
+        categoryTrends,
         topStudent,
         mostImproved,
         totalTeachers,
