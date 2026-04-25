@@ -9,6 +9,8 @@ export interface DashboardStats {
   mostImproved: { name: string; diff: number } | null;
   totalTeachers: number;
   studentsPerTeacher: number;
+  recentOfficialCount: number;
+  totalExamCount: number;
 }
 
 const VALID_CATEGORIES = new Set([
@@ -83,26 +85,33 @@ export function useDashboardStats() {
           mostImproved: null,
           totalTeachers,
           studentsPerTeacher,
+          recentOfficialCount: 0,
+          totalExamCount: 0,
         });
         setLoading(false);
         return;
       }
+
+      // Son 1 ay
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
       // Sınav sonuçları
       const { data: results } = await supabase
         .from("exam_results")
         .select(
           `
-          student_id,
-          total_net,
-          created_at,
-          exams!inner (
-            is_official,
-            exam_template_id,
-            exam_templates ( category ),
-            subjects ( category )
-          )
-        `,
+            student_id,
+            exam_id,
+            total_net,
+            created_at,
+            exams!inner (
+              is_official,
+              exam_template_id,
+              exam_templates ( category ),
+              subjects ( category )
+            )
+          `,
         )
         .in("student_id", studentIds)
         .order("created_at", { ascending: false });
@@ -116,12 +125,32 @@ export function useDashboardStats() {
           mostImproved: null,
           totalTeachers,
           studentsPerTeacher,
+          recentOfficialCount: 0,
+          totalExamCount: 0,
         });
         setLoading(false);
         return;
       }
 
-      // Category bazlı net ortalamaları — sadece şablon kullanan veya kurum sınavları
+      // Toplam deneme sayısı
+      const totalExamCount = new Set(
+        results
+          .filter((r: any) => new Date(r.created_at) >= oneMonthAgo)
+          .map((r: any) => r.exam_id),
+      ).size;
+
+      // Son 1 aydaki kurum sınavı sayısı
+      const recentOfficialExamIds = new Set(
+        results
+          .filter((r: any) => {
+            const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+            return exam?.is_official && new Date(r.created_at) >= oneMonthAgo;
+          })
+          .map((r: any) => r.exam_id),
+      );
+      const recentOfficialCount = recentOfficialExamIds.size;
+
+      // Category bazlı net ortalamaları
       const categoryNets = new Map<string, number[]>();
       for (const r of results as any[]) {
         const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
@@ -194,6 +223,8 @@ export function useDashboardStats() {
         mostImproved,
         totalTeachers,
         studentsPerTeacher,
+        recentOfficialCount,
+        totalExamCount,
       });
       setLoading(false);
     }

@@ -11,12 +11,11 @@ import {
   TrophyIcon,
   SigmaIcon,
   UserRoundIcon,
-  UserPlusIcon,
   GraduationCapIcon,
-  PlusIcon,
+  BuildingIcon,
+  ClipboardListIcon,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
 import { AddMemberButton } from "@/components/add-member-button";
 
 const CATEGORY_VARIANTS: Record<
@@ -24,9 +23,9 @@ const CATEGORY_VARIANTS: Record<
   { variant: StatCardProps["variant"]; label: string }
 > = {
   TYT: { variant: "primary", label: "Ort. TYT Net" },
-  "AYT-SAY": { variant: "primary", label: "Ort. AYT Sayısal Net" },
-  "AYT-EA": { variant: "primary", label: "Ort. AYT EA Net" },
-  "AYT-SÖZ": { variant: "primary", label: "Ort. AYT Sözel Net" },
+  "AYT-SAY": { variant: "primary", label: "Ort. AYT Sayısal" },
+  "AYT-EA": { variant: "primary", label: "Ort. AYT EA" },
+  "AYT-SÖZ": { variant: "primary", label: "Ort. AYT Sözel" },
   LGS: { variant: "primary", label: "Ort. LGS Net" },
   YDT: { variant: "primary", label: "Ort. YDT Net" },
 };
@@ -44,8 +43,6 @@ export default function AdminDashboard() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 items-stretch gap-4">
-        {" "}
-        {/* Sabit kartlar */}
         <StatCard
           title="Toplam Öğrenci"
           value={loading ? "..." : (stats?.totalStudents ?? 0)}
@@ -58,12 +55,31 @@ export default function AdminDashboard() {
           title="Toplam Öğretmen"
           value={loading ? "..." : (stats?.totalTeachers ?? 0)}
           sub={
-            loading ? "" : `${stats?.studentsPerTeacher ?? 0} öğrenci/öğretmen`
+            loading
+              ? ""
+              : `${stats?.studentsPerTeacher ?? 0} öğrenci / öğretmen`
           }
           icon={UserRoundIcon}
           bgIcon={UserRoundIcon}
           variant="default"
         />
+        <StatCard
+          title="Son 1 Ay Kurum Sınavı"
+          value={loading ? "..." : (stats?.recentOfficialCount ?? 0)}
+          sub="yapılan kurum sınavı"
+          icon={BuildingIcon}
+          bgIcon={BuildingIcon}
+          variant="default"
+        />
+        <StatCard
+          title="Son 1 Ay Deneme"
+          value={loading ? "..." : (stats?.totalExamCount ?? 0)}
+          sub="girilen toplam sonuç"
+          icon={ClipboardListIcon}
+          bgIcon={ClipboardListIcon}
+          variant="default"
+        />
+
         {/* Kategori ortalamaları — dinamik */}
         {!loading &&
           stats?.categoryAverages &&
@@ -75,14 +91,14 @@ export default function AdminDashboard() {
                 key={cat}
                 title={config.label}
                 value={avg}
-                sub={`${cat} sınavları`}
+                sub={`Kurum ${cat} ortalaması`}
                 icon={SigmaIcon}
                 bgIcon={SigmaIcon}
                 variant={config.variant}
               />
             );
           })}
-        {/* En başarılı */}
+
         <StatCard
           title="En Başarılı"
           value={loading ? "..." : (stats?.topStudent?.name ?? "—")}
@@ -90,14 +106,13 @@ export default function AdminDashboard() {
             loading
               ? ""
               : stats?.topStudent
-                ? `${stats.topStudent.net} Net`
-                : ""
+                ? `${stats.topStudent.net} net`
+                : "Henüz sonuç yok"
           }
           icon={TrophyIcon}
           bgIcon={TrophyIcon}
           variant="warning"
         />
-        {/* En çok gelişen */}
         <StatCard
           title="En Çok Gelişen"
           value={loading ? "..." : (stats?.mostImproved?.name ?? "—")}
@@ -105,13 +120,14 @@ export default function AdminDashboard() {
             loading
               ? ""
               : stats?.mostImproved
-                ? `+${stats.mostImproved.diff} Net`
-                : ""
+                ? `+${stats.mostImproved.diff} net gelişim`
+                : "Henüz yeterli veri yok"
           }
           icon={TrendingUpIcon}
           bgIcon={TrendingUpIcon}
           variant="success"
         />
+
         <AddMemberButton
           title="Öğrenci Ekle"
           sub="Yeni Öğrenci"

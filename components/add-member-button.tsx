@@ -5,23 +5,24 @@ import type { LucideIcon } from "lucide-react";
 export function AddMemberButton({
   title,
   sub,
-  icon: Icon,
   bgIcon: BgIcon,
-  variant = "default",
-  onClick,
   className,
+  variant = "default",
+  icon: Icon,
+  onClick,
 }: {
   title: string;
   sub: string;
   icon: LucideIcon;
   bgIcon: LucideIcon;
   variant?: "default" | "success" | "danger" | "warning" | "primary";
-  onClick: () => void;
   className?: string;
+  onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={cn(
         "relative rounded-2xl px-4 py-3 flex flex-col overflow-hidden min-h-[160px]",
         "border-2 border-dashed border-border bg-card",
@@ -42,11 +43,11 @@ export function AddMemberButton({
           <PlusIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
       </div>
-      <p className="font-bold text-foreground leading-none text-3xl md:text-4xl text-left flex-1 flex items-center relative z-10 group-hover:text-primary transition-colors">
+      <p className="font-bold text-foreground text-3xl md:text-4xl text-left flex-1 flex items-center relative z-10 group-hover:text-primary transition-colors">
         {sub}
       </p>
       <p className="text-xs text-left text-muted-foreground min-h-4">
-        {title} hesabı oluştur
+        {sub} Kaydı Oluştur
       </p>
     </button>
   );
