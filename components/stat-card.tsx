@@ -59,7 +59,7 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "relative rounded-2xl px-4 py-3 flex flex-col overflow-hidden min-h-[120px]",
+        "relative rounded-2xl px-4 py-3 flex flex-col overflow-hidden min-h-[160px]",
         "transition-all duration-200 hover:shadow-md cursor-default",
         styles.card,
         className,
