@@ -18,16 +18,13 @@ import {
 import { useState } from "react";
 import { AddMemberButton } from "@/components/add-member-button";
 
-const CATEGORY_VARIANTS: Record<
-  string,
-  { variant: StatCardProps["variant"]; label: string }
-> = {
-  TYT: { variant: "primary", label: "Ort. TYT Net" },
-  "AYT-SAY": { variant: "primary", label: "Ort. AYT Sayısal" },
-  "AYT-EA": { variant: "primary", label: "Ort. AYT EA" },
-  "AYT-SÖZ": { variant: "primary", label: "Ort. AYT Sözel" },
-  LGS: { variant: "primary", label: "Ort. LGS Net" },
-  YDT: { variant: "primary", label: "Ort. YDT Net" },
+const CATEGORY_LABELS: Record<string, string> = {
+  TYT: "TYT",
+  "AYT-SAY": "AYT Sayısal",
+  "AYT-EA": "AYT EA",
+  "AYT-SÖZ": "AYT Sözel",
+  LGS: "LGS",
+  YDT: "YDT",
 };
 
 export default function AdminDashboard() {
@@ -80,21 +77,29 @@ export default function AdminDashboard() {
           variant="default"
         />
 
-        {/* Kategori ortalamaları — dinamik */}
+        {/* Son 1 ay category ortalamaları */}
         {!loading &&
-          stats?.categoryAverages &&
-          Object.entries(stats.categoryAverages).map(([cat, avg]) => {
-            const config = CATEGORY_VARIANTS[cat];
-            if (!config) return null;
+          stats?.monthlyCategoryAverages &&
+          Object.entries(stats.monthlyCategoryAverages).map(([cat, avg]) => {
+            const overall = stats.categoryAverages[cat];
+            const change =
+              overall > 0
+                ? Math.round(((avg - overall) / overall) * 100 * 10) / 10
+                : 0;
+            const label = CATEGORY_LABELS[cat] ?? cat;
             return (
               <StatCard
-                key={cat}
-                title={config.label}
+                key={`monthly-${cat}`}
+                title={`Son 1 Ay ${label}`}
                 value={avg}
-                sub={`Kurum ${cat} ortalaması`}
+                sub={
+                  change !== 0
+                    ? `${change > 0 ? "+" : ""}%${change} genel ortalamaya göre`
+                    : `Genel ort: ${overall}`
+                }
                 icon={SigmaIcon}
                 bgIcon={SigmaIcon}
-                variant={config.variant}
+                variant={change >= 0 ? "success" : "danger"}
               />
             );
           })}

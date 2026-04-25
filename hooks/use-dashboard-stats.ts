@@ -5,12 +5,16 @@ export interface DashboardStats {
   totalStudents: number;
   inactiveStudents: number;
   categoryAverages: Record<string, number>;
+  monthlyCategoryAverages: Record<string, number>;
   topStudent: { name: string; net: number } | null;
   mostImproved: { name: string; diff: number } | null;
   totalTeachers: number;
   studentsPerTeacher: number;
   recentOfficialCount: number;
   totalExamCount: number;
+  overallAvgNet: number;
+  monthlyAvgNet: number;
+  monthlyAvgChange: number;
 }
 
 const VALID_CATEGORIES = new Set([
@@ -44,7 +48,6 @@ export function useDashboardStats() {
 
       const orgId = member.organization_id;
 
-      // Öğrenciler
       const { data: students } = await supabase
         .from("students")
         .select(
@@ -63,7 +66,6 @@ export function useDashboardStats() {
         studentNameMap.set(s.id, `${s.first_name} ${s.last_name}`);
       }
 
-      // Öğretmenler
       const { data: teachers } = await supabase
         .from("organization_members")
         .select("id")
@@ -76,91 +78,126 @@ export function useDashboardStats() {
           ? Math.round((totalStudents / totalTeachers) * 10) / 10
           : 0;
 
+      const emptyStats = {
+        totalStudents,
+        inactiveStudents,
+        categoryAverages: {},
+        monthlyCategoryAverages: {},
+        topStudent: null,
+        mostImproved: null,
+        totalTeachers,
+        studentsPerTeacher,
+        recentOfficialCount: 0,
+        totalExamCount: 0,
+        overallAvgNet: 0,
+        monthlyAvgNet: 0,
+        monthlyAvgChange: 0,
+      };
+
       if (studentIds.length === 0) {
-        setStats({
-          totalStudents,
-          inactiveStudents,
-          categoryAverages: {},
-          topStudent: null,
-          mostImproved: null,
-          totalTeachers,
-          studentsPerTeacher,
-          recentOfficialCount: 0,
-          totalExamCount: 0,
-        });
+        setStats(emptyStats);
         setLoading(false);
         return;
       }
 
-      // Son 1 ay
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-      // Sınav sonuçları
       const { data: results } = await supabase
         .from("exam_results")
         .select(
           `
-            student_id,
-            exam_id,
-            total_net,
-            created_at,
-            exams!inner (
-              is_official,
-              exam_template_id,
-              exam_templates ( category ),
-              subjects ( category )
-            )
-          `,
+          student_id,
+          exam_id,
+          total_net,
+          created_at,
+          exams!inner (
+            is_official,
+            exam_template_id,
+            exam_templates ( category ),
+            subjects ( category )
+          )
+        `,
         )
         .in("student_id", studentIds)
         .order("created_at", { ascending: false });
 
       if (!results || results.length === 0) {
-        setStats({
-          totalStudents,
-          inactiveStudents,
-          categoryAverages: {},
-          topStudent: null,
-          mostImproved: null,
-          totalTeachers,
-          studentsPerTeacher,
-          recentOfficialCount: 0,
-          totalExamCount: 0,
-        });
+        setStats(emptyStats);
         setLoading(false);
         return;
       }
 
-      // Toplam deneme sayısı
-      const totalExamCount = new Set(
-        results
-          .filter((r: any) => new Date(r.created_at) >= oneMonthAgo)
+      const recentResults = results.filter(
+        (r: any) => new Date(r.created_at) >= oneMonthAgo,
+      );
+
+      // Toplam deneme sayısı — son 1 ay, unique exam_id
+      const totalExamCount = new Set(recentResults.map((r: any) => r.exam_id))
+        .size;
+
+      // Son 1 ay kurum sınavı sayısı
+      const recentOfficialCount = new Set(
+        recentResults
+          .filter((r: any) => {
+            const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+            return exam?.is_official;
+          })
           .map((r: any) => r.exam_id),
       ).size;
 
-      // Son 1 aydaki kurum sınavı sayısı
-      const recentOfficialExamIds = new Set(
-        results
-          .filter((r: any) => {
-            const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
-            return exam?.is_official && new Date(r.created_at) >= oneMonthAgo;
-          })
-          .map((r: any) => r.exam_id),
-      );
-      const recentOfficialCount = recentOfficialExamIds.size;
-
-      // Category bazlı net ortalamaları
-      const categoryNets = new Map<string, number[]>();
-      for (const r of results as any[]) {
+      // Official + şablonlu — genel
+      const officialResults = results.filter((r: any) => {
         const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
-        const hasTemplate = !!exam?.exam_template_id;
-        const isOfficial = exam?.is_official;
-        if (!hasTemplate || !isOfficial) continue;
+        return exam?.is_official && !!exam?.exam_template_id;
+      });
 
+      // Official + şablonlu — son 1 ay
+      const recentOfficialResults = recentResults.filter((r: any) => {
+        const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+        return exam?.is_official && !!exam?.exam_template_id;
+      });
+
+      // Genel ortalama net
+      const overallAvgNet =
+        officialResults.length > 0
+          ? Math.round(
+              (officialResults.reduce(
+                (s: number, r: any) => s + r.total_net,
+                0,
+              ) /
+                officialResults.length) *
+                100,
+            ) / 100
+          : 0;
+
+      // Son 1 ay ortalama net
+      const monthlyAvgNet =
+        recentOfficialResults.length > 0
+          ? Math.round(
+              (recentOfficialResults.reduce(
+                (s: number, r: any) => s + r.total_net,
+                0,
+              ) /
+                recentOfficialResults.length) *
+                100,
+            ) / 100
+          : 0;
+
+      // Yüzdelik değişim
+      const monthlyAvgChange =
+        overallAvgNet > 0
+          ? Math.round(
+              ((monthlyAvgNet - overallAvgNet) / overallAvgNet) * 100 * 10,
+            ) / 10
+          : 0;
+
+      // Genel category ortalamaları
+      const categoryNets = new Map<string, number[]>();
+      for (const r of officialResults as any[]) {
+        const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
         const category =
           exam?.exam_templates?.category ?? exam?.subjects?.category ?? null;
-
         if (!category || !VALID_CATEGORIES.has(category)) continue;
         if (!categoryNets.has(category)) categoryNets.set(category, []);
         categoryNets.get(category)!.push(r.total_net);
@@ -173,6 +210,25 @@ export function useDashboardStats() {
           100;
       }
 
+      // Son 1 ay category ortalamaları
+      const monthlyCategoryNets = new Map<string, number[]>();
+      for (const r of recentOfficialResults as any[]) {
+        const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
+        const category =
+          exam?.exam_templates?.category ?? exam?.subjects?.category ?? null;
+        if (!category || !VALID_CATEGORIES.has(category)) continue;
+        if (!monthlyCategoryNets.has(category))
+          monthlyCategoryNets.set(category, []);
+        monthlyCategoryNets.get(category)!.push(r.total_net);
+      }
+
+      const monthlyCategoryAverages: Record<string, number> = {};
+      for (const [cat, nets] of monthlyCategoryNets.entries()) {
+        monthlyCategoryAverages[cat] =
+          Math.round((nets.reduce((s, n) => s + n, 0) / nets.length) * 100) /
+          100;
+      }
+
       // Öğrenci bazında sonuçları grupla
       const studentMap = new Map<
         string,
@@ -181,10 +237,7 @@ export function useDashboardStats() {
       for (const r of results as any[]) {
         const id = r.student_id;
         if (!studentMap.has(id)) {
-          studentMap.set(id, {
-            name: studentNameMap.get(id) ?? "—",
-            nets: [],
-          });
+          studentMap.set(id, { name: studentNameMap.get(id) ?? "—", nets: [] });
         }
         studentMap.get(id)!.nets.push({ net: r.total_net, date: r.created_at });
       }
@@ -219,12 +272,16 @@ export function useDashboardStats() {
         totalStudents,
         inactiveStudents,
         categoryAverages,
+        monthlyCategoryAverages,
         topStudent,
         mostImproved,
         totalTeachers,
         studentsPerTeacher,
         recentOfficialCount,
         totalExamCount,
+        overallAvgNet,
+        monthlyAvgNet,
+        monthlyAvgChange,
       });
       setLoading(false);
     }
