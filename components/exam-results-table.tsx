@@ -117,7 +117,7 @@ function GeneralResultsTable({
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
-            <TableHead className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
+            <TableHead className="left-0 z-10 w-35 min-w-35 sm:w-50in-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-100min-w-[400px] max-w-100">
               Deneme Adı
             </TableHead>
             {subjects.map((subject) => (
@@ -135,7 +135,7 @@ function GeneralResultsTable({
           </TableRow>
           {!isCompact && (
             <TableRow className="border-border bg-muted/20">
-              <TableHead className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]" />
+              <TableHead className="left-0 z-10 w-35 min-w-35 sm:w-50 sm:min-w-50 lg:w-[320px] lg:min-w-[320px] xl:w-100 xl:min-w-100 max-w-100" />
               {subjects.map((name) => (
                 <SubHeaders key={`sub-${name}`} />
               ))}
@@ -154,7 +154,7 @@ function GeneralResultsTable({
               )}
               onClick={() => onRowClick?.(result)}
             >
-              <TableCell className="left-0 z-10 w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
+              <TableCell className="left-0 z-10 w-35 min-w-35 sm:w-50 sm:min-w-50 lg:w-[320px] lg:min-w-[320px] xl:w-100 xl:min-w-100 max-w-100 font-medium">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}
@@ -224,7 +224,7 @@ function BranchResultsTable({
       <Table>
         <TableHeader>
           <TableRow className="border-border bg-muted/40">
-            <TableHead className="w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px]">
+            <TableHead className="w-35 min-w-35 sm:w-50 sm:min-w-50 lg:w-[320px] lg:min-w-[320px] xl:w-100 xl:min-w-100 max-w-100">
               Deneme Adı
             </TableHead>
             <TableHead className="text-center text-xs font-normal text-green-600 dark:text-green-400">
@@ -255,7 +255,7 @@ function BranchResultsTable({
               )}
               onClick={() => onRowClick?.(result)}
             >
-              <TableCell className="w-[140px] min-w-[140px] sm:w-[200px] sm:min-w-[200px] lg:w-[320px] lg:min-w-[320px] xl:w-[400px] xl:min-w-[400px] max-w-[400px] font-medium">
+              <TableCell className="w-35 min-w-35 sm:w-50 sm:min-w-50 lg:w-[320px] lg:min-w-[320px] xl:w-100 xl:min-w-100 max-w-100 font-medium">
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm leading-tight truncate">
                     {result.exam_name}

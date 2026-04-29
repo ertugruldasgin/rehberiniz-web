@@ -7,8 +7,6 @@ export function AddMemberButton({
   sub,
   bgIcon: BgIcon,
   className,
-  variant = "default",
-  icon: Icon,
   onClick,
 }: {
   title: string;
@@ -24,7 +22,7 @@ export function AddMemberButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative rounded-2xl px-4 py-3 flex flex-col overflow-hidden min-h-[160px]",
+        "relative rounded-2xl px-4 py-3 flex flex-col overflow-hidden min-h-40",
         "border-2 border-dashed border-border bg-card",
         "hover:border-primary/40 hover:bg-primary/5 hover:shadow-md",
         "transition-all duration-200 cursor-pointer group",

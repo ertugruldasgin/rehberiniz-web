@@ -37,6 +37,7 @@ import { useSubjects } from "@/hooks/use-subjects";
 import { useStudents } from "@/hooks/use-students";
 import { useTeachers } from "@/hooks/use-teachers";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 type ExamType = "general" | "custom" | "branch";
 type TargetType = "all" | "teacher" | "individual";
@@ -685,7 +686,7 @@ export function AddExamDialog({
                             )}
                           </div>
                           {s.avatar_url ? (
-                            <img
+                            <Image
                               src={s.avatar_url}
                               alt={`${s.first_name} ${s.last_name}`}
                               className="h-7 w-7 rounded-lg object-cover shrink-0"

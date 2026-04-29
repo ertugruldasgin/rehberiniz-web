@@ -272,7 +272,7 @@ export function EditGuidanceNoteDialog({
                 setErrors((p) => ({ ...p, content: "" }));
               }}
               placeholder="Görüşme notlarını buraya yazın..."
-              className={`min-h-[120px] resize-none ${errors.content ? "border-destructive" : ""}`}
+              className={`min-h-30 resize-none ${errors.content ? "border-destructive" : ""}`}
               disabled={loading}
             />
             {errors.content && (
