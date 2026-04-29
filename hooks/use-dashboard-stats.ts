@@ -30,11 +30,11 @@ const VALID_CATEGORIES = new Set([
 function getWeekKey(date: Date): string {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Pazartesi
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
   return d.toISOString().split("T")[0];
 }
 
-export function useDashboardStats() {
+export function useDashboardStats(role: "admin" | "teacher" = "admin") {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,19 +49,26 @@ export function useDashboardStats() {
 
       const { data: member } = await supabase
         .from("organization_members")
-        .select("organization_id")
+        .select("id, organization_id")
         .eq("user_id", user.id)
         .single();
       if (!member) return;
 
       const orgId = member.organization_id;
 
-      const { data: students } = await supabase
+      // Öğrenciler — öğretmense sadece kendi öğrencileri
+      let studentQuery = supabase
         .from("students")
         .select(
           "id, first_name, last_name, profiles!students_user_id_fkey1(is_active)",
         )
         .eq("organization_id", orgId);
+
+      if (role === "teacher") {
+        studentQuery = studentQuery.eq("teacher_id", member.id);
+      }
+
+      const { data: students } = await studentQuery;
 
       const totalStudents = students?.length ?? 0;
       const inactiveStudents =
@@ -74,17 +81,23 @@ export function useDashboardStats() {
         studentNameMap.set(s.id, `${s.first_name} ${s.last_name}`);
       }
 
-      const { data: teachers } = await supabase
-        .from("organization_members")
-        .select("id")
-        .eq("organization_id", orgId)
-        .eq("role", "teacher");
+      // Öğretmenler — sadece admin için
+      let totalTeachers = 0;
+      let studentsPerTeacher = 0;
 
-      const totalTeachers = teachers?.length ?? 0;
-      const studentsPerTeacher =
-        totalTeachers > 0
-          ? Math.round((totalStudents / totalTeachers) * 10) / 10
-          : 0;
+      if (role === "admin") {
+        const { data: teachers } = await supabase
+          .from("organization_members")
+          .select("id")
+          .eq("organization_id", orgId)
+          .eq("role", "teacher");
+
+        totalTeachers = teachers?.length ?? 0;
+        studentsPerTeacher =
+          totalTeachers > 0
+            ? Math.round((totalStudents / totalTeachers) * 10) / 10
+            : 0;
+      }
 
       const emptyStats = {
         totalStudents,
@@ -141,11 +154,9 @@ export function useDashboardStats() {
         (r: any) => new Date(r.created_at) >= oneMonthAgo,
       );
 
-      // Toplam deneme sayısı — son 1 ay, unique exam_id
       const totalExamCount = new Set(recentResults.map((r: any) => r.exam_id))
         .size;
 
-      // Son 1 ay kurum sınavı sayısı
       const recentOfficialCount = new Set(
         recentResults
           .filter((r: any) => {
@@ -155,19 +166,16 @@ export function useDashboardStats() {
           .map((r: any) => r.exam_id),
       ).size;
 
-      // Official + şablonlu — genel
       const officialResults = results.filter((r: any) => {
         const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
         return exam?.is_official && !!exam?.exam_template_id;
       });
 
-      // Official + şablonlu — son 1 ay
       const recentOfficialResults = recentResults.filter((r: any) => {
         const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
         return exam?.is_official && !!exam?.exam_template_id;
       });
 
-      // Genel ortalama net
       const overallAvgNet =
         officialResults.length > 0
           ? Math.round(
@@ -180,7 +188,6 @@ export function useDashboardStats() {
             ) / 100
           : 0;
 
-      // Son 1 ay ortalama net
       const monthlyAvgNet =
         recentOfficialResults.length > 0
           ? Math.round(
@@ -193,7 +200,6 @@ export function useDashboardStats() {
             ) / 100
           : 0;
 
-      // Yüzdelik değişim
       const monthlyAvgChange =
         overallAvgNet > 0
           ? Math.round(
@@ -238,7 +244,7 @@ export function useDashboardStats() {
           100;
       }
 
-      // Category bazlı aylık trend
+      // Category bazlı haftalık trend
       const categoryTrendMap = new Map<string, Map<string, number[]>>();
       for (const r of officialResults as any[]) {
         const exam = Array.isArray(r.exams) ? r.exams[0] : r.exams;
@@ -246,7 +252,7 @@ export function useDashboardStats() {
           exam?.exam_templates?.category ?? exam?.subjects?.category ?? null;
         if (!category || !VALID_CATEGORIES.has(category)) continue;
 
-        const weekKey = getWeekKey(new Date(r.created_at)); // monthKey → weekKey
+        const weekKey = getWeekKey(new Date(r.created_at));
         if (!categoryTrendMap.has(category))
           categoryTrendMap.set(category, new Map());
         const trendMap = categoryTrendMap.get(category)!;
@@ -326,7 +332,7 @@ export function useDashboardStats() {
       setLoading(false);
     }
     fetch();
-  }, []);
+  }, [role]);
 
   return { stats, loading };
 }
