@@ -1,3 +1,4 @@
+import { ComingSoon } from "@/components/coming-soon";
 import { PageHeader } from "@/components/page-header";
 import React from "react";
 
@@ -8,6 +9,7 @@ const Reports = () => {
         title="Raporlar"
         description="Öğrencilerinizin raporlarını oluşturun."
       />
+      <ComingSoon />
     </div>
   );
 };
