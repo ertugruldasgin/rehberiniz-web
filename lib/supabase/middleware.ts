@@ -38,7 +38,7 @@ export async function updateSession(request: NextRequest) {
   const role = user?.user_role as UserRole | undefined;
   const { pathname } = request.nextUrl;
 
-  if (!user && !pathname.startsWith("/auth")) {
+  if (!user && !pathname.startsWith("/auth") && pathname !== "/privacy") {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);

@@ -14,7 +14,7 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="flex w-full flex-col space-y-8 sm:w-[400px]">
+    <div className="flex w-full flex-col space-y-8 sm:w-100">
       <div className="flex flex-col space-y-2">
         <h1 className="text-6xl font-bold tracking-tight -ml-1">
           Rehberiniz&apos;e
@@ -90,6 +90,19 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
           >
             Şifremi Unuttum?
           </Link>
+        </div>
+
+        <div className="flex items-baseline mt-2 -mb-2">
+          <p className="text-xs text-center text-muted-foreground">
+            Giriş yaparak{" "}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-3 hover:text-foreground transition-colors"
+            >
+              Gizlilik Politikası
+            </Link>
+            {"'nı"} kabul etmiş olursunuz.
+          </p>
         </div>
 
         <Button

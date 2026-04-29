@@ -1,5 +1,6 @@
 import { Label } from "@/components/ui/label";
 import { Metadata } from "next";
+import Image from "next/image";
 import React from "react";
 import { LoginForm } from "./login-form";
 
@@ -22,31 +23,7 @@ const institutions: Institution[] = [
     name: "Endpoint Akademi Eğitim Kurumları",
     src: "/images/institutions/logo-1.jpg",
   },
-  {
-    type: "initials",
-    name: "Rehberiniz1",
-    initials: "R1",
-    bgColor: "bg-blue-500",
-  },
-  {
-    type: "initials",
-    name: "Rehberiniz2",
-    initials: "R2",
-    bgColor: "bg-pink-500",
-  },
-  {
-    type: "initials",
-    name: "Rehberiniz3",
-    initials: "R3",
-    bgColor: "bg-amber-500",
-  },
-  {
-    type: "initials",
-    name: "Rehberiniz4",
-    initials: "R4",
-    bgColor: "bg-rose-500",
-  },
-  { type: "counter", count: 20 },
+  //{ type: "counter", count: 1 },
 ];
 
 export default async function LoginPage(props: LoginPageProps) {
@@ -94,10 +71,10 @@ export default async function LoginPage(props: LoginPageProps) {
                 Bize güvenen kurumlar
               </span>
               <div className="flex -space-x-3">
-                {institutions.map((inst, i) => {
+                {institutions.map((inst) => {
                   const name =
                     inst.type === "counter"
-                      ? `ve ${inst.count}+ kurum daha`
+                      ? `ve ${inst.count} kurum daha`
                       : inst.name;
 
                   const tooltip = (
@@ -113,7 +90,9 @@ export default async function LoginPage(props: LoginPageProps) {
                         className="group relative hover:z-50 transition-transform hover:scale-110 cursor-pointer"
                       >
                         {tooltip}
-                        <img
+                        <Image
+                          width={36}
+                          height={36}
                           src={inst.src}
                           alt={inst.name}
                           className="w-9 h-9 rounded-full border-2 border-card object-cover"
@@ -157,7 +136,9 @@ export default async function LoginPage(props: LoginPageProps) {
       </div>
 
       <div className="flex items-center justify-center p-8 bg-card">
-        <LoginForm errorMessage={searchParams?.message} />
+        <div className="flex flex-col items-center gap-6 w-full max-w-sm">
+          <LoginForm errorMessage={searchParams?.message} />
+        </div>
       </div>
     </div>
   );
