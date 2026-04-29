@@ -234,7 +234,7 @@ export default function StudentDashboard() {
             <StatCard
               key={exam_type}
               title={`${EXAM_TYPE_LABELS[exam_type] ?? exam_type} Hedefi`}
-              value={target_net.toFixed(1)}
+              value={target_net.toFixed(2)}
               sub="toplam hedef net"
               icon={TargetIcon}
               bgIcon={TargetIcon}

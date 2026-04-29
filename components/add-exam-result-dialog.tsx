@@ -20,8 +20,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ClipboardListIcon, CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 import { useState } from "react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 import { toast } from "sonner";
 import { useExamTemplates, ExamSection } from "@/hooks/use-exam-templates";
 import { cn } from "@/lib/utils";
@@ -146,7 +154,8 @@ export function AddExamResultDialog({
   const [examType, setExamType] = useState<ExamType>("general");
   const [step, setStep] = useState<"info" | "sections">("info");
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState<Date>(new Date());
+  const [dateInput, setDateInput] = useState(format(new Date(), "dd.MM.yyyy"));
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -192,6 +201,20 @@ export function AddExamResultDialog({
     setSelectedSubjectId("");
     setSections([]);
     setErrors((p) => ({ ...p, subject: "" }));
+  }
+
+  function handleDateInputChange(value: string) {
+    setDateInput(value);
+    if (value.length === 10) {
+      const [day, month, year] = value.split(".");
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        setDate(parsed);
+        setErrors((p) => ({ ...p, date: "" }));
+      } else {
+        setErrors((p) => ({ ...p, date: "Geçersiz tarih." }));
+      }
+    }
   }
 
   function handleSectionChange(
@@ -252,7 +275,7 @@ export function AddExamResultDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          date,
+          date: format(date, "yyyy-MM-dd"),
           template_id:
             examType === "general" || examType === "custom"
               ? selectedTemplateId
@@ -281,7 +304,8 @@ export function AddExamResultDialog({
     setStep("info");
     setExamType("general");
     setTitle("");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(new Date());
+    setDateInput(format(new Date(), "dd.MM.yyyy"));
     setSelectedTemplateId("");
     setSelectedSubjectId("");
     setSelectedCategory("");
@@ -312,7 +336,6 @@ export function AddExamResultDialog({
           <div className="px-6 py-6 space-y-7 flex flex-col items-center">
             {step === "info" && (
               <>
-                {/* Deneme Türü Seçici */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
                   {(
                     [
@@ -337,7 +360,6 @@ export function AddExamResultDialog({
                   ))}
                 </div>
 
-                {/* Sınav Bilgileri */}
                 <div className="space-y-4 w-full">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -345,7 +367,6 @@ export function AddExamResultDialog({
                   </div>
                   <Separator />
                   <div className="grid grid-cols-2 gap-4">
-                    {/* Sınav Adı — tam genişlik */}
                     <div className="space-y-2 col-span-2">
                       <Label htmlFor="title">
                         Sınav Adı <span className="text-destructive">*</span>
@@ -374,20 +395,50 @@ export function AddExamResultDialog({
 
                     {/* Tarih */}
                     <div className="space-y-2">
-                      <Label htmlFor="date">
+                      <Label>
                         Tarih <span className="text-destructive">*</span>
                       </Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={date}
-                        onChange={(e) => {
-                          setDate(e.target.value);
-                          setErrors((p) => ({ ...p, date: "" }));
-                        }}
-                        className={`h-10 ${errors.date ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
-                        disabled={loading}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="GG.AA.YYYY"
+                          value={dateInput}
+                          onChange={(e) =>
+                            handleDateInputChange(e.target.value)
+                          }
+                          className={cn(
+                            "h-10",
+                            errors.date && "border-destructive",
+                          )}
+                          disabled={loading}
+                          maxLength={10}
+                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-10 w-10 bg-muted hover:bg-muted shrink-0 px-0 cursor-pointer"
+                              disabled={loading}
+                            >
+                              <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={(d) => {
+                                if (d) {
+                                  setDate(d);
+                                  setDateInput(format(d, "dd.MM.yyyy"));
+                                  setErrors((p) => ({ ...p, date: "" }));
+                                }
+                              }}
+                              locale={tr}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       {errors.date && (
                         <p className="text-xs text-destructive">
                           {errors.date}
@@ -395,7 +446,6 @@ export function AddExamResultDialog({
                       )}
                     </div>
 
-                    {/* Genel — Şablon */}
                     {examType === "general" && (
                       <SelectField
                         label="Şablon"
@@ -428,7 +478,6 @@ export function AddExamResultDialog({
                       />
                     )}
 
-                    {/* Branş — Alan */}
                     {examType === "branch" && (
                       <SelectField
                         label="Alan"
@@ -449,7 +498,6 @@ export function AddExamResultDialog({
                       />
                     )}
 
-                    {/* Branş — Ders */}
                     {examType === "branch" && selectedCategory && (
                       <div className="col-span-2">
                         <SelectField
@@ -474,7 +522,6 @@ export function AddExamResultDialog({
 
             {step === "sections" && (
               <>
-                {/* Özet */}
                 <div className="grid grid-cols-3 gap-3 w-full">
                   <div className="rounded-xl bg-green-50 dark:bg-green-900/20 p-3 text-center">
                     <p className="text-xs text-muted-foreground mb-1">
@@ -502,7 +549,6 @@ export function AddExamResultDialog({
                   </div>
                 </div>
 
-                {/* Dersler */}
                 <div className="space-y-2 w-full">
                   {sections.map((s) => (
                     <div key={s.key} className="rounded-xl border bg-card p-3">

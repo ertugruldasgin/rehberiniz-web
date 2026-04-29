@@ -21,8 +21,16 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon, CheckIcon } from "lucide-react";
 import { useState } from "react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 import { toast } from "sonner";
 import { useExamTemplates } from "@/hooks/use-exam-templates";
 import { useSubjects } from "@/hooks/use-subjects";
@@ -160,7 +168,8 @@ export function AddExamDialog({
   const [step, setStep] = useState<Step>("info");
   const [examType, setExamType] = useState<ExamType>("general");
   const [title, setTitle] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState<Date>(new Date());
+  const [dateInput, setDateInput] = useState(format(new Date(), "dd.MM.yyyy"));
   const [selectedTemplateId, setSelectedTemplateId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -187,6 +196,20 @@ export function AddExamDialog({
     setSelectedCategory(category);
     setSelectedSubjectId("");
     setErrors((p) => ({ ...p, subject: "" }));
+  }
+
+  function handleDateInputChange(value: string) {
+    setDateInput(value);
+    if (value.length === 10) {
+      const [day, month, year] = value.split(".");
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        setDate(parsed);
+        setErrors((p) => ({ ...p, date: "" }));
+      } else {
+        setErrors((p) => ({ ...p, date: "Geçersiz tarih." }));
+      }
+    }
   }
 
   function validateInfo() {
@@ -262,7 +285,7 @@ export function AddExamDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
-          date,
+          date: format(date, "yyyy-MM-dd"),
           template_id: examType !== "branch" ? selectedTemplateId : null,
           subject_id: examType === "branch" ? selectedSubjectId : null,
           student_ids: finalStudentIds,
@@ -284,7 +307,8 @@ export function AddExamDialog({
     setStep("info");
     setExamType("general");
     setTitle("");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(new Date());
+    setDateInput(format(new Date(), "dd.MM.yyyy"));
     setSelectedTemplateId("");
     setSelectedSubjectId("");
     setSelectedCategory("");
@@ -313,7 +337,6 @@ export function AddExamDialog({
           <div className="px-6 py-6 space-y-7 flex flex-col items-center">
             {step === "info" && (
               <>
-                {/* Tür seçici */}
                 <div className="flex items-center gap-1 p-1 rounded-xl bg-muted w-fit">
                   {(
                     [
@@ -338,7 +361,6 @@ export function AddExamDialog({
                   ))}
                 </div>
 
-                {/* Sınav Bilgileri */}
                 <div className="space-y-4 w-full">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold">Sınav Bilgileri</p>
@@ -367,21 +389,53 @@ export function AddExamDialog({
                       )}
                     </div>
 
+                    {/* Tarih */}
                     <div className="space-y-2">
-                      <Label htmlFor="date">
+                      <Label>
                         Tarih <span className="text-destructive">*</span>
                       </Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={date}
-                        onChange={(e) => {
-                          setDate(e.target.value);
-                          setErrors((p) => ({ ...p, date: "" }));
-                        }}
-                        className={`h-10 ${errors.date ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
-                        disabled={loading}
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="GG.AA.YYYY"
+                          value={dateInput}
+                          onChange={(e) =>
+                            handleDateInputChange(e.target.value)
+                          }
+                          className={cn(
+                            "h-10",
+                            errors.date && "border-destructive",
+                          )}
+                          disabled={loading}
+                          maxLength={10}
+                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-10 w-10 bg-muted hover:bg-muted shrink-0 px-0 cursor-pointer"
+                              disabled={loading}
+                            >
+                              <CalendarIcon className="h-4 w-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={date}
+                              onSelect={(d) => {
+                                if (d) {
+                                  setDate(d);
+                                  setDateInput(format(d, "dd.MM.yyyy"));
+                                  setErrors((p) => ({ ...p, date: "" }));
+                                }
+                              }}
+                              locale={tr}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       {errors.date && (
                         <p className="text-xs text-destructive">
                           {errors.date}

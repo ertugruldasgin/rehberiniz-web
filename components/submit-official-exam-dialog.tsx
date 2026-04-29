@@ -152,8 +152,7 @@ export function SubmitOfficialExamDialog({
         <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
           <DialogTitle className="text-lg font-bold">{exam.title}</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            {category} · {dateFormatted} · Her ders için doğru ve yanlış
-            sayısını girin.
+            {category} - {dateFormatted}
           </DialogDescription>
         </DialogHeader>
 

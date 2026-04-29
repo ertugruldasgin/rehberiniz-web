@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -13,10 +12,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { EyeIcon, LockIcon } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-import { Switch } from "./ui/switch";
 import {
   Select,
   SelectContent,
@@ -24,6 +19,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { EyeIcon, LockIcon, CalendarIcon } from "lucide-react";
+import { useState } from "react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { toast } from "sonner";
+import { Switch } from "./ui/switch";
+import { cn } from "@/lib/utils";
 
 const SUGGESTED_CATEGORIES = [
   "Akademik",
@@ -50,14 +58,29 @@ export function AddGuidanceNoteDialog({
   const [category, setCategory] = useState("");
   const [customCategory, setCustomCategory] = useState("");
   const [content, setContent] = useState("");
-  const [meetingDate, setMeetingDate] = useState(
-    new Date().toISOString().split("T")[0],
+  const [meetingDate, setMeetingDate] = useState<Date>(new Date());
+  const [meetingDateInput, setMeetingDateInput] = useState(
+    format(new Date(), "dd.MM.yyyy"),
   );
   const [isPrivate, setIsPrivate] = useState(true);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const finalCategory = category === "Diğer" ? customCategory : category;
+
+  function handleDateInputChange(value: string) {
+    setMeetingDateInput(value);
+    if (value.length === 10) {
+      const [day, month, year] = value.split(".");
+      const parsed = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(parsed.getTime())) {
+        setMeetingDate(parsed);
+        setErrors((p) => ({ ...p, meetingDate: "" }));
+      } else {
+        setErrors((p) => ({ ...p, meetingDate: "Geçersiz tarih." }));
+      }
+    }
+  }
 
   function validate() {
     const newErrors: Record<string, string> = {};
@@ -89,7 +112,7 @@ export function AddGuidanceNoteDialog({
           student_id: studentId,
           category: finalCategory.trim(),
           content: content.trim(),
-          meeting_date: meetingDate,
+          meeting_date: format(meetingDate, "yyyy-MM-dd"),
           is_private: isPrivate,
         }),
       });
@@ -109,7 +132,8 @@ export function AddGuidanceNoteDialog({
     setCategory("");
     setCustomCategory("");
     setContent("");
-    setMeetingDate(new Date().toISOString().split("T")[0]);
+    setMeetingDate(new Date());
+    setMeetingDateInput(format(new Date(), "dd.MM.yyyy"));
     setIsPrivate(true);
     setErrors({});
     onOpenChange(false);
@@ -183,20 +207,49 @@ export function AddGuidanceNoteDialog({
 
           {/* Görüşme Tarihi */}
           <div className="space-y-2">
-            <Label htmlFor="meetingDate">
+            <Label>
               Görüşme Tarihi <span className="text-destructive">*</span>
             </Label>
-            <Input
-              id="meetingDate"
-              type="date"
-              value={meetingDate}
-              onChange={(e) => {
-                setMeetingDate(e.target.value);
-                setErrors((p) => ({ ...p, meetingDate: "" }));
-              }}
-              className={`h-10 hover:cursor-pointer  ${errors.meetingDate ? "border-destructive" : ""}`}
-              disabled={loading}
-            />
+            <div className="flex gap-2">
+              <Input
+                placeholder="GG.AA.YYYY"
+                value={meetingDateInput}
+                onChange={(e) => handleDateInputChange(e.target.value)}
+                className={cn(
+                  "h-10",
+                  errors.meetingDate && "border-destructive",
+                )}
+                disabled={loading}
+                maxLength={10}
+              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-10 w-10 bg-muted hover:bg-muted shrink-0 px-0 cursor-pointer"
+                    disabled={loading}
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={meetingDate}
+                    onSelect={(d) => {
+                      if (d) {
+                        setMeetingDate(d);
+                        setMeetingDateInput(format(d, "dd.MM.yyyy"));
+                        setErrors((p) => ({ ...p, meetingDate: "" }));
+                      }
+                    }}
+                    locale={tr}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             {errors.meetingDate && (
               <p className="text-xs text-destructive">{errors.meetingDate}</p>
             )}

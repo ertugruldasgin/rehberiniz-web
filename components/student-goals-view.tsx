@@ -641,7 +641,7 @@ export function StudentGoalsView({
               {editing ? "Hedef Toplam Net" : "Toplam Hedef Net"}
             </p>
             <p className="text-4xl font-bold tabular-nums text-primary">
-              {editing ? editTotal.toFixed(1) : totalTarget.toFixed(1)}
+              {editing ? editTotal.toFixed(2) : totalTarget.toFixed(2)}
             </p>
           </div>
 
