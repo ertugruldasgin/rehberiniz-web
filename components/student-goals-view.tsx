@@ -200,10 +200,6 @@ export function StudentGoalsView({
   const totalTarget = currentGoals
     .filter((g) => !Object.keys(SUBJECT_GROUPS).includes(g.subject_slug))
     .reduce((s, g) => s + g.target_net, 0);
-  const setCount = currentGoals.filter(
-    (g) =>
-      !Object.keys(SUBJECT_GROUPS).includes(g.subject_slug) && g.target_net > 0,
-  ).length;
 
   if (loading) {
     return (
@@ -683,7 +679,7 @@ export function StudentGoalsView({
                     return (
                       <div key={item.subject.id} className="space-y-1">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground truncate max-w-[120px]">
+                          <span className="text-muted-foreground truncate max-w-30">
                             {item.subject.name}
                           </span>
                           <span
@@ -723,7 +719,7 @@ export function StudentGoalsView({
                   return (
                     <div key={item.groupSlug} className="space-y-1">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground truncate max-w-[120px]">
+                        <span className="text-muted-foreground truncate max-w-30">
                           {GROUP_LABELS[item.groupSlug] ?? item.groupSlug}
                         </span>
                         <span
