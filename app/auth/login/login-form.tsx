@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,16 +16,23 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
 
   return (
     <div className="flex w-full flex-col space-y-8 sm:w-100">
-      <div className="flex flex-col space-y-2">
-        <h1 className="text-6xl font-bold tracking-tight -ml-1">
-          Rehberiniz&apos;e
-        </h1>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Tekrar Hoş Geldiniz
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Platformumuza kurumsal erişim için bizimle iletişime geçin.
-        </p>
+      <div className="flex flex-col space-y-6">
+        <Image
+          src="/images/rehberiniz/rehberiniz_light_transparent2.png"
+          alt="Rehberiniz"
+          width={360}
+          height={360}
+          priority
+          className="h-48 md:h-52 lg:h-56 xl:h-60 w-auto object-contain"
+        />
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">
+            Tekrar Hoş Geldiniz
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Platformumuza kurumsal erişim için bizimle iletişime geçin.
+          </p>
+        </div>
       </div>
 
       <form action={login} className="grid gap-5">
@@ -58,7 +66,8 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
               tabIndex={-1}
             >
               {showPassword ? (
@@ -75,41 +84,41 @@ export function LoginForm({ errorMessage }: { errorMessage?: string }) {
             <Checkbox
               id="remember"
               name="remember"
-              className="rounded-sm data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-white focus-visible:ring-primary/30 focus-visible:ring-offset-0 cursor-pointer"
+              className="cursor-pointer rounded-sm focus-visible:ring-primary/30 focus-visible:ring-offset-0 data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-white"
             />
             <Label
               htmlFor="remember"
-              className="text-sm font-medium cursor-pointer"
+              className="cursor-pointer text-sm font-medium"
             >
               Beni Hatırla
             </Label>
           </div>
           <Link
             href="/auth/forgot-password"
-            className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
+            className="text-sm font-semibold text-foreground transition-colors hover:text-primary"
           >
             Şifremi Unuttum?
           </Link>
         </div>
 
-        <div className="flex items-baseline mt-2 -mb-2">
-          <p className="text-xs text-center text-muted-foreground">
+        <div className="-mb-2 mt-2">
+          <p className="text-xs text-muted-foreground">
             Giriş yaparak{" "}
             <Link
               href="/privacy"
-              className="underline underline-offset-3 hover:text-foreground transition-colors"
+              className="underline underline-offset-3 transition-colors hover:text-foreground"
             >
               Gizlilik Politikası
             </Link>
-            {"'nı"} kabul etmiş olursunuz.
+            &apos;nı kabul etmiş olursunuz.
           </p>
         </div>
 
         <Button
           type="submit"
-          className="h-12 w-full text-sm font-bold tracking-wide cursor-pointer hover:bg-primary/90 transition-colors"
+          className="h-12 w-full cursor-pointer text-sm font-bold tracking-wide transition-colors hover:bg-primary/90"
         >
-          Rehberiniz&apos;e Giriş Yap
+          Giriş Yap
         </Button>
 
         {errorMessage && (

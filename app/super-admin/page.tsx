@@ -103,7 +103,7 @@ function SuperAdminForm() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="orgSlug">Kurum Slug</Label>
+              <Label htmlFor="orgSlug">Kurum ID</Label>
               <Input
                 id="orgSlug"
                 value={form.orgSlug}
@@ -117,7 +117,7 @@ function SuperAdminForm() {
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Küçük harf, tire kullanın. Benzersiz olmalı.
+                Sadece küçük harf ve tire kullanın. Benzersiz olmalı.
               </p>
             </div>
           </div>

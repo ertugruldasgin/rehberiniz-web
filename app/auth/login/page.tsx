@@ -20,7 +20,7 @@ type Institution =
 const institutions: Institution[] = [
   {
     type: "image",
-    name: "Endpoint Akademi Eğitim Kurumları",
+    name: "Endpoint Akademi",
     src: "/images/institutions/logo-1.jpg",
   },
   //{ type: "counter", count: 1 },
@@ -43,8 +43,7 @@ export default async function LoginPage(props: LoginPageProps) {
           />
           <div className="relative z-10 flex flex-col gap-8 text-primary-foreground">
             <Label className="flex flex-col gap-2 lg:gap-3 xl:gap-4 items-baseline text-primary-foreground font-bold md:text-5xl xl:text-6xl 2xl:text-7xl 3xl:text-8xl tracking-tight">
-              <p className="text-primary-foreground/40">Öğrencilerinizin</p>
-              <p className="text-primary-foreground/60">Geleceği</p>
+              <p className="text-primary-foreground/40">Rehberliğiniz</p>
               <p className="font-medium italic font-serif text-primary-foreground/80">
                 Verilerle
               </p>
@@ -54,15 +53,15 @@ export default async function LoginPage(props: LoginPageProps) {
           <div className="flex flex-col gap-4 relative z-10 bg-card text-card-foreground tracking-tight rounded-xl p-4 lg:p-4 xl:p-6 text-md lg:text-lg xl:text-xl 2xl:text-2xl 3xl:text-3xl font-semibold leading-snug lg:leading-7 xl:leading-9">
             <div>
               <p>
-                Kurumunuzun rehberlik sürecini dijitale taşıyın. <br />{" "}
+                Öğrenci, öğretmen ve kurum tek bir ekranda. <br />{" "}
                 <span className="font-serif font-bold italic text-primary">
                   Veriye{" "}
                 </span>
-                dayalı kararlar, daha{" "}
+                dayalı takip, birlikte kazanılan{" "}
                 <span className="font-serif font-bold italic text-primary">
-                  başarılı{" "}
+                  başarı
                 </span>
-                öğrenciler.
+                .
               </p>
             </div>
 
