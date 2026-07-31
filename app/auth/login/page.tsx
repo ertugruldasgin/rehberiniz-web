@@ -18,11 +18,11 @@ type Institution =
   | { type: "counter"; count: number };
 
 const institutions: Institution[] = [
-  {
-    type: "image",
-    name: "Endpoint Akademi",
-    src: "/images/institutions/logo-1.jpg",
-  },
+  // {
+  //   type: "image",
+  //   name: "Endpoint Akademi",
+  //   src: "/images/institutions/logo-1.jpg",
+  // },
   //{ type: "counter", count: 1 },
 ];
 
@@ -66,9 +66,9 @@ export default async function LoginPage(props: LoginPageProps) {
             </div>
 
             <div className="flex items-center justify-end mt-4 gap-1">
-              <span className="text-xs text-muted-foreground font-medium mr-2">
+              {/* <span className="text-xs text-muted-foreground font-medium mr-2">
                 Bize güvenen kurumlar
-              </span>
+              </span> */}
               <div className="flex -space-x-3">
                 {institutions.map((inst) => {
                   const name =
